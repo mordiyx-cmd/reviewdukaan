@@ -4,313 +4,1697 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0B0F19">
-  <title>ReviewDukaan — Powered by MORDIYX</title>
-  <meta name="description" content="ReviewDukaan: local businesses ke liye Google review QR standee preview aur AI reply demo.">
+
+  <title>ReviewDukaan — A MORDIYX AI Venture</title>
+
+  <meta
+    name="description"
+    content="ReviewDukaan: local businesses ke liye Google review QR standee aur customer review reply assistant."
+  >
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
+
   <script>
     tailwind.config = {
-      theme: { extend: { colors: {
-        brandDark: '#0B0F19', brandViolet: '#6D28D9',
-        brandPurple: '#4C1D95', brandCard: '#1E293B'
-      }}}
+      theme: {
+        extend: {
+          colors: {
+            brandDark: '#0B0F19',
+            brandViolet: '#6D28D9',
+            brandPurple: '#4C1D95',
+            brandCard: '#1E293B'
+          }
+        }
+      }
     };
   </script>
+
   <style>
-    html { scroll-behavior: smooth; }
-    body { background:#0B0F19; }
-    @media print {
-      body * { visibility:hidden !important; }
-      #standee-print-area, #standee-print-area * { visibility:visible !important; }
-      #standee-print-area {
-        display:block !important;
-        position:absolute;
-        left:0;
-        top:0;
-        width:100%;
-        max-width:100% !important;
-        margin:0;
-        border:3px solid #6D28D9;
-        box-shadow:none;
+    :root {
+      color-scheme: dark;
+      --brand-dark: #0B0F19;
+      --brand-violet: #6D28D9;
+      --brand-card: #1E293B;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 90px;
+    }
+
+    body {
+      background: var(--brand-dark);
+      min-width: 320px;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+      outline: 2px solid #C4B5FD;
+      outline-offset: 3px;
+    }
+
+    .glass-header {
+      background: rgba(11, 15, 25, .92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .brand-gradient {
+      background: linear-gradient(110deg, #6D28D9, #7E22CE);
+    }
+
+    .brand-gradient-text {
+      background: linear-gradient(90deg, #C4B5FD, #F0ABFC);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .card-surface {
+      background: #1E293B;
+      border: 1px solid rgba(255, 255, 255, .09);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, .15);
+    }
+
+    .field {
+      display: block;
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      background: #0B0F19;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .field::placeholder {
+      color: #64748B;
+    }
+
+    .field:focus {
+      border-color: #A78BFA;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, .12);
+    }
+
+    .primary-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 46px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: linear-gradient(110deg, #6D28D9, #6B21A8);
+      color: white;
+      font-size: 14px;
+      font-weight: 750;
+      transition: filter .2s, transform .2s, opacity .2s;
+    }
+
+    .primary-button:hover {
+      filter: brightness(1.14);
+    }
+
+    .primary-button:active {
+      transform: scale(.99);
+    }
+
+    .primary-button:disabled {
+      cursor: wait;
+      opacity: .65;
+    }
+
+    .secondary-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 10px 14px;
+      border: 1px solid #475569;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, .45);
+      color: #E2E8F0;
+      font-size: 13px;
+      font-weight: 650;
+      transition: background .2s;
+    }
+
+    .secondary-button:hover {
+      background: #334155;
+    }
+
+    .eyebrow {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .13em;
+      color: #CBD5E1;
+    }
+
+    .muted {
+      color: #94A3B8;
+    }
+
+    .modal-backdrop {
+      background: rgba(2, 6, 23, .82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .modal-panel {
+      animation: modalIn .18s ease-out;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(.99);
       }
-      .no-print { display:none !important; }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34D399;
+    }
+
+    .toast {
+      animation: toastIn .2s ease-out;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .standee {
+      width: 100%;
+      max-width: 310px;
+      margin-inline: auto;
+      border: 4px solid #6D28D9;
+      border-radius: 16px;
+      background: white;
+      padding: 24px 18px;
+      text-align: center;
+      color: #0F172A;
+      overflow-wrap: anywhere;
+    }
+
+    .standee-qr {
+      width: 176px;
+      height: 176px;
+      object-fit: contain;
+      margin: 18px auto;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    @media (max-width: 420px) {
+      .brand-name {
+        font-size: 16px;
+      }
+
+      .brand-subtitle {
+        font-size: 8px;
+        letter-spacing: .13em;
+      }
+
+      .header-actions button {
+        padding-inline: 10px;
+        font-size: 12px;
+      }
+    }
+
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 12mm;
+      }
+
+      body {
+        background: white !important;
+      }
+
+      body * {
+        visibility: hidden !important;
+      }
+
+      #standee-print-area,
+      #standee-print-area * {
+        visibility: visible !important;
+      }
+
+      #standee-print-area {
+        display: block !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
+        box-shadow: none !important;
+        border: 3px solid #6D28D9 !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+
+      .no-print {
+        display: none !important;
+      }
     }
   </style>
 </head>
+
 <body class="min-h-screen bg-brandDark font-sans text-white antialiased">
 
-  <header class="sticky top-0 z-40 border-b border-white/10 bg-brandDark/90 px-4 py-3 backdrop-blur">
-    <div class="mx-auto flex max-w-5xl items-center justify-between gap-3">
-      <a href="#" class="flex items-center gap-3" aria-label="ReviewDukaan home">
-        <span class="rounded-xl bg-brandViolet px-3 py-2 text-sm font-black shadow-lg shadow-violet-900/40">M</span>
-        <span>
-          <span class="block text-lg font-extrabold tracking-tight">Review<span class="text-violet-400">Dukaan</span></span>
-          <span class="block text-[10px] font-semibold uppercase tracking-[.2em] text-slate-400">A MORDIYX AI Venture</span>
+  <!-- HEADER -->
+
+  <header class="glass-header sticky top-0 z-40 border-b border-white/10 px-3 py-3 sm:px-4">
+    <div class="mx-auto flex max-w-5xl items-center justify-between gap-2">
+
+      <a href="#" class="flex min-w-0 items-center gap-2.5" aria-label="ReviewDukaan home">
+
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl brand-gradient text-sm font-black shadow-lg shadow-violet-950/40">
+          M
         </span>
+
+        <span class="min-w-0">
+          <span class="brand-name block text-lg font-extrabold tracking-tight">
+            Review<span class="text-violet-400">Dukaan</span>
+          </span>
+
+          <span class="brand-subtitle block text-[9px] font-semibold uppercase tracking-[.2em] text-slate-400">
+            A MORDIYX AI Venture
+          </span>
+        </span>
+
       </a>
-      <span class="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-300">
-        <i class="fa-solid fa-circle text-[7px]"></i> Interactive Demo
-      </span>
+
+      <div class="header-actions flex shrink-0 items-center gap-2">
+
+        <button
+          id="login-open"
+          type="button"
+          class="secondary-button"
+        >
+          Login
+        </button>
+
+        <button
+          id="signup-open"
+          type="button"
+          class="primary-button min-h-[40px] px-3 py-2"
+        >
+          Sign Up
+        </button>
+
+        <button
+          id="account-button"
+          type="button"
+          class="secondary-button hidden"
+        >
+          <i class="fa-solid fa-user"></i>
+          Account
+        </button>
+
+      </div>
     </div>
   </header>
 
-  <main class="mx-auto max-w-5xl px-4 py-8 sm:py-12">
+
+  <!-- MAIN -->
+
+  <main class="mx-auto max-w-5xl px-4 py-8 sm:py-11">
+
+    <!-- HERO -->
 
     <section class="mx-auto max-w-3xl text-center">
+
       <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-400/10 px-3 py-1.5 text-xs font-semibold text-violet-200">
-        <i class="fa-solid fa-store"></i> Local businesses ke liye
+        <i class="fa-solid fa-store"></i>
+        Local businesses ke liye
       </div>
+
       <h1 class="text-3xl font-black leading-tight tracking-tight sm:text-5xl">
         Google Reviews ko
-        <span class="bg-gradient-to-r from-violet-300 to-fuchsia-300 bg-clip-text text-transparent">aasani se manage</span>
+        <span class="brand-gradient-text">aasani se manage</span>
         karein
       </h1>
+
       <p class="mx-auto mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-        Apni dukaan ke liye review QR standee banayein aur customer reviews ke professional replies ka demo dekhein. Honest feedback ko invite karein—rating ya sales badhne ki guarantee nahi.
+        Apni dukaan ke liye review QR standee banayein aur customer reviews ke professional replies ka demo dekhein.
+        Honest feedback invite karein—rating ya sales ki guarantee nahi.
       </p>
+
     </section>
+
+
+    <!-- GLOBAL NOTIFICATION -->
+
+    <div
+      id="toast"
+      class="toast fixed left-4 right-4 top-[82px] z-[70] mx-auto hidden max-w-lg rounded-xl border border-white/10 bg-slate-900 p-4 shadow-2xl"
+      role="status"
+      aria-live="polite"
+    >
+      <div class="flex items-start gap-3">
+        <i id="toast-icon" class="fa-solid fa-circle-info mt-0.5 text-violet-300"></i>
+        <p id="toast-message" class="text-sm leading-5 text-slate-200"></p>
+        <button
+          id="toast-close"
+          type="button"
+          class="ml-auto text-slate-400 hover:text-white"
+          aria-label="Dismiss notification"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+
+    <!-- MAIN CARDS -->
 
     <section class="mx-auto mt-8 grid max-w-4xl gap-5 md:grid-cols-2">
 
-      <div id="setup-card" class="rounded-2xl border border-white/10 bg-brandCard p-5 shadow-2xl sm:p-6">
+      <!-- QR CARD -->
+
+      <div
+        id="setup-card"
+        class="card-surface rounded-2xl p-5 sm:p-6"
+      >
+
         <div class="mb-5 flex items-center gap-3">
-          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/15 text-violet-300">
+
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-300">
             <i class="fa-solid fa-qrcode"></i>
           </span>
+
           <div>
             <h2 class="font-bold">Free QR Standee Maker</h2>
-            <p class="text-xs text-slate-400">Apni details enter karein</p>
-          </div>
-        </div>
-
-        <form id="qr-form" class="space-y-4">
-          <div>
-            <label for="shop-name" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-300">
-              Dukaan / Business ka naam
-            </label>
-            <input id="shop-name" required maxlength="80" type="text"
-              placeholder="e.g. Raj Bakery & Sweets"
-              class="w-full rounded-xl border border-slate-700 bg-brandDark px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-violet-400">
-          </div>
-
-          <div>
-            <label for="shop-link" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-300">
-              Google Review / Profile link
-            </label>
-            <input id="shop-link" required type="url" inputmode="url"
-              placeholder="https://..."
-              class="w-full rounded-xl border border-slate-700 bg-brandDark px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-violet-400">
-            <p class="mt-1.5 text-xs text-slate-500">
-              Google ka asli review link paste karein. QR generate karne ke liye internet zaroori hai.
+            <p class="text-xs text-slate-400">
+              Apni details enter karein
             </p>
           </div>
 
-          <button class="w-full rounded-xl bg-gradient-to-r from-violet-700 to-purple-800 px-4 py-3.5 text-sm font-bold shadow-lg shadow-violet-950/40 transition hover:brightness-110" type="submit">
-            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate QR Standee
-          </button>
-
-          <p id="qr-error" class="hidden text-sm text-rose-300" role="alert"></p>
-        </form>
-      </div>
-
-      <div class="rounded-2xl border border-white/10 bg-brandCard p-5 shadow-2xl sm:p-6">
-        <div class="mb-5 flex items-center gap-3">
-          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
-            <i class="fa-solid fa-comment-dots"></i>
-          </span>
-          <div>
-            <h2 class="font-bold">AI Reply Preview</h2>
-            <p class="text-xs text-slate-400">Sample demo—live AI connected nahi hai</p>
-          </div>
         </div>
 
-        <label for="review-text" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-300">
+
+        <form id="qr-form" class="space-y-4">
+
+          <div>
+            <label
+              for="shop-name"
+              class="eyebrow mb-1.5 block"
+            >
+              Dukaan / Business ka naam
+            </label>
+
+            <input
+              id="shop-name"
+              class="field"
+              required
+              maxlength="80"
+              type="text"
+              autocomplete="organization"
+              placeholder="e.g. Raj Bakery & Sweets"
+            >
+          </div>
+
+
+          <div>
+            <label
+              for="shop-link"
+              class="eyebrow mb-1.5 block"
+            >
+              Google Review / Profile link
+            </label>
+
+            <input
+              id="shop-link"
+              class="field"
+              required
+              maxlength="2048"
+              type="url"
+              inputmode="url"
+              autocomplete="url"
+              placeholder="https://..."
+            >
+
+            <p class="mt-1.5 text-xs leading-5 text-slate-500">
+              Apna Google review link paste karein. QR banane ke liye internet zaroori hai.
+            </p>
+          </div>
+
+
+          <button
+            id="qr-generate"
+            class="primary-button w-full"
+            type="submit"
+          >
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            Generate QR Standee
+          </button>
+
+          <p
+            id="qr-error"
+            class="hidden text-sm leading-5 text-rose-300"
+            role="alert"
+          ></p>
+
+        </form>
+
+      </div>
+
+
+      <!-- AI REPLY CARD -->
+
+      <div class="card-surface rounded-2xl p-5 sm:p-6">
+
+        <div class="mb-5 flex items-center gap-3">
+
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
+            <i class="fa-solid fa-comment-dots"></i>
+          </span>
+
+          <div>
+            <h2 class="font-bold">AI Reply Preview</h2>
+            <p class="text-xs text-slate-400">
+              Sample demo · Live AI abhi connected nahi
+            </p>
+          </div>
+
+        </div>
+
+
+        <label
+          for="review-text"
+          class="eyebrow mb-1.5 block"
+        >
           Customer review
         </label>
-        <textarea id="review-text" rows="3" maxlength="1000"
+
+        <textarea
+          id="review-text"
+          rows="3"
+          maxlength="1000"
           placeholder="Customer ka review yahan paste karein..."
-          class="w-full resize-y rounded-xl border border-slate-700 bg-brandDark px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-violet-400"></textarea>
+          class="field resize-y"
+        ></textarea>
+
 
         <div class="mt-4">
-          <label for="reply-language" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-300">
+
+          <label
+            for="reply-language"
+            class="eyebrow mb-1.5 block"
+          >
             Reply language
           </label>
-          <select id="reply-language" class="w-full rounded-xl border border-slate-700 bg-brandDark px-4 py-3 text-sm text-white outline-none focus:border-violet-400">
+
+          <select
+            id="reply-language"
+            class="field"
+          >
             <option value="hinglish">Hinglish</option>
             <option value="hindi">Hindi</option>
             <option value="english">English</option>
           </select>
+
         </div>
 
-        <button id="reply-button" type="button" class="mt-4 w-full rounded-xl border border-violet-400/40 bg-violet-500/10 px-4 py-3.5 text-sm font-bold text-violet-200 transition hover:bg-violet-500/20">
-          <i class="fa-solid fa-pen-to-square mr-2"></i>Generate Sample Reply
+
+        <button
+          id="reply-button"
+          type="button"
+          class="secondary-button mt-4 w-full border-violet-400/40 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20"
+        >
+          <i class="fa-solid fa-pen-to-square"></i>
+          Generate Sample Reply
         </button>
 
-        <div id="reply-result" class="mt-4 hidden rounded-xl border border-white/10 bg-brandDark p-4">
-          <p class="mb-2 text-xs font-bold uppercase tracking-wider text-emerald-300">Suggested reply (demo)</p>
-          <p id="reply-output" class="whitespace-pre-wrap text-sm leading-6 text-slate-200"></p>
-          <button id="copy-reply" type="button" class="mt-3 rounded-lg bg-slate-700 px-3 py-2 text-xs font-bold hover:bg-slate-600">
-            <i class="fa-regular fa-copy mr-1"></i>Copy reply
+
+        <p
+          id="reply-error"
+          class="mt-3 hidden text-sm text-rose-300"
+          role="alert"
+        ></p>
+
+
+        <div
+          id="reply-result"
+          class="mt-4 hidden rounded-xl border border-white/10 bg-brandDark p-4"
+        >
+
+          <p class="mb-2 text-xs font-bold uppercase tracking-wider text-emerald-300">
+            Suggested reply · Demo
+          </p>
+
+          <p
+            id="reply-output"
+            class="whitespace-pre-wrap break-words text-sm leading-6 text-slate-200"
+          ></p>
+
+          <button
+            id="copy-reply"
+            type="button"
+            class="secondary-button mt-3 min-h-[36px] px-3 py-2 text-xs"
+          >
+            <i class="fa-regular fa-copy"></i>
+            Copy reply
           </button>
+
         </div>
+
       </div>
+
     </section>
 
-    <section id="preview-section" class="mx-auto mt-6 hidden max-w-4xl rounded-2xl border border-violet-400/20 bg-brandCard p-5 shadow-2xl sm:p-6">
+
+    <!-- QR PREVIEW -->
+
+    <section
+      id="preview-section"
+      class="mx-auto mt-6 hidden max-w-4xl rounded-2xl border border-violet-400/20 bg-brandCard p-5 shadow-2xl sm:p-6"
+      aria-labelledby="preview-heading"
+    >
+
       <div class="mb-5 flex items-center justify-between gap-3">
+
         <div>
-          <h2 class="font-bold text-emerald-300"><i class="fa-solid fa-circle-check mr-2"></i>QR preview ready</h2>
-          <p class="mt-1 text-xs text-slate-400">QR scan karke destination verify kar lein.</p>
-        </div>
-        <button id="reset-qr" type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700">Reset</button>
-      </div>
+          <h2
+            id="preview-heading"
+            class="font-bold text-emerald-300"
+          >
+            <i class="fa-solid fa-circle-check mr-2"></i>
+            QR preview ready
+          </h2>
 
-      <div id="standee-print-area" class="mx-auto max-w-xs space-y-4 rounded-xl border-4 border-violet-700 bg-white p-6 text-center text-slate-900">
-        <p class="text-[10px] font-black uppercase tracking-[.2em] text-violet-800">ReviewDukaan</p>
-        <h3 id="preview-title" class="break-words text-2xl font-black">Your Business</h3>
-        <p class="text-sm text-slate-600">Humein apna honest feedback dein</p>
-        <img id="qr-image" class="mx-auto h-44 w-44" alt="Generated QR code" width="176" height="176">
-        <p class="rounded-lg bg-slate-900 px-3 py-3 text-sm font-bold text-white">Scan karein aur apna experience share karein</p>
-        <p class="text-[10px] text-slate-500">Thank you for supporting our local business.</p>
-      </div>
-
-      <div class="no-print mt-5 grid gap-3 sm:grid-cols-2">
-        <button id="print-standee" type="button" class="rounded-xl bg-white px-4 py-3 font-bold text-slate-900 hover:bg-slate-100">
-          <i class="fa-solid fa-file-pdf mr-2"></i>Print / Save as PDF
-        </button>
-        <a id="open-review-link" href="#" target="_blank" rel="noopener noreferrer" class="rounded-xl border border-slate-600 px-4 py-3 text-center text-sm font-bold text-white hover:bg-slate-700">
-          <i class="fa-solid fa-arrow-up-right-from-square mr-2"></i>Open review link
-        </a>
-      </div>
-
-      <p class="no-print mt-3 text-xs leading-5 text-slate-400">
-        PDF ke liye button dabayein, phir browser print dialog mein “Save as PDF” choose karein. QR image third-party QR service se load hoti hai.
-      </p>
-    </section>
-
-    <section class="mx-auto mt-8 max-w-4xl rounded-2xl border border-white/10 bg-white/[.03] p-5 sm:p-6">
-      <div class="grid gap-5 sm:grid-cols-[1fr_auto] sm:items-center">
-        <div>
-          <p class="text-xs font-bold uppercase tracking-[.2em] text-violet-300">Coming next</p>
-          <h2 class="mt-2 text-xl font-extrabold">MORDIYX AI Review Replier</h2>
-          <p class="mt-2 max-w-xl text-sm leading-6 text-slate-300">
-            Planned price: ₹299/month. Real AI generation, accounts, payments aur trial abhi is static demo mein connected nahi hain.
+          <p class="mt-1 text-xs text-slate-400">
+            QR scan karke destination verify kar lein.
           </p>
         </div>
-        <div class="sm:text-right">
-          <p class="text-3xl font-black">₹299<span class="text-sm font-medium text-slate-400">/month</span></p>
-          <span class="mt-1 inline-block rounded-full bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-200">Preview only</span>
-        </div>
+
+        <button
+          id="reset-qr"
+          type="button"
+          class="secondary-button min-h-[36px] px-3 py-2 text-xs"
+        >
+          Reset
+        </button>
+
       </div>
+
+
+      <!-- PRINT AREA -->
+
+      <div
+        id="standee-print-area"
+        class="standee"
+      >
+
+        <p class="text-[10px] font-black uppercase tracking-[.2em] text-violet-800">
+          ReviewDukaan
+        </p>
+
+        <h3
+          id="preview-title"
+          class="mt-3 break-words text-2xl font-black"
+        >
+          Your Business
+        </h3>
+
+        <p class="mt-3 text-sm text-slate-600">
+          Humein apna honest feedback dein
+        </p>
+
+        <img
+          id="qr-image"
+          class="standee-qr hidden"
+          alt="Google review QR code"
+          width="176"
+          height="176"
+        >
+
+        <div
+          id="qr-image-loading"
+          class="mx-auto my-5 grid h-44 w-44 place-items-center rounded-xl bg-slate-100 text-sm text-slate-500"
+        >
+          <span>
+            <i class="fa-solid fa-spinner fa-spin mb-2 block text-xl"></i>
+            QR load ho raha hai...
+          </span>
+        </div>
+
+        <p class="rounded-lg bg-slate-900 px-3 py-3 text-sm font-bold text-white">
+          Scan karein aur apna experience share karein
+        </p>
+
+        <p class="mt-4 text-[10px] text-slate-500">
+          Thank you for supporting our local business.
+        </p>
+
+      </div>
+
+
+      <div class="no-print mt-5 grid gap-3 sm:grid-cols-2">
+
+        <button
+          id="print-standee"
+          type="button"
+          class="primary-button bg-none"
+        >
+          <i class="fa-solid fa-file-pdf"></i>
+          Print / Save as PDF
+        </button>
+
+        <a
+          id="open-review-link"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="secondary-button"
+        >
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          Open review link
+        </a>
+
+      </div>
+
+
+      <p class="no-print mt-3 text-xs leading-5 text-slate-400">
+        PDF ke liye print button dabayein aur browser mein “Save as PDF” choose karein.
+        QR image third-party QR service se load hoti hai.
+      </p>
+
     </section>
 
+
+    <!-- PRICING -->
+
+    <section
+      id="pricing"
+      class="mx-auto mt-8 max-w-4xl rounded-2xl border border-white/10 bg-white/[.03] p-5 sm:p-6"
+    >
+
+      <div class="grid gap-5 sm:grid-cols-[1fr_auto] sm:items-center">
+
+        <div>
+
+          <p class="text-xs font-bold uppercase tracking-[.2em] text-violet-300">
+            Coming next
+          </p>
+
+          <h2 class="mt-2 text-xl font-extrabold">
+            MORDIYX AI Review Replier
+          </h2>
+
+          <p class="mt-2 max-w-xl text-sm leading-6 text-slate-300">
+            Real AI generation, accounts, payments aur trial ko agle development phase mein connect kiya jayega.
+          </p>
+
+        </div>
+
+        <div class="sm:text-right">
+
+          <p class="text-3xl font-black">
+            ₹299<span class="text-sm font-medium text-slate-400">/month</span>
+          </p>
+
+          <span class="mt-1 inline-block rounded-full bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-200">
+            Preview only
+          </span>
+
+          <button
+            id="pricing-signup"
+            type="button"
+            class="secondary-button mt-3 w-full sm:w-auto"
+          >
+            Get Early Access
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+
     <footer class="py-8 text-center text-xs text-slate-500">
-      <p>© <span id="year"></span> ReviewDukaan · A MORDIYX AI Venture</p>
-      <p class="mt-2">Google review rating ya business results ki guarantee nahi. Customers se honest feedback maangein.</p>
+
+      <p>
+        © <span id="year"></span> ReviewDukaan · A MORDIYX AI Venture
+      </p>
+
+      <p class="mt-2 leading-5">
+        Google review rating ya business results ki guarantee nahi.
+        Customers se honest feedback maangein.
+      </p>
+
     </footer>
+
   </main>
 
-  <script>
-    const byId = (id) => document.getElementById(id);
-    byId('year').textContent = new Date().getFullYear();
 
-    byId('qr-form').addEventListener('submit', function (event) {
+  <!-- AUTH MODAL -->
+
+  <div
+    id="auth-modal"
+    class="modal-backdrop fixed inset-0 z-50 hidden overflow-y-auto p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="auth-title"
+    aria-describedby="auth-description"
+  >
+
+    <div class="flex min-h-full items-center justify-center">
+
+      <div class="modal-panel relative my-auto w-full max-w-md rounded-2xl border border-white/10 bg-brandCard p-5 shadow-2xl sm:p-7">
+
+        <button
+          id="auth-close"
+          type="button"
+          class="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-white/5 hover:text-white"
+          aria-label="Close dialog"
+        >
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+
+
+        <div class="mb-5 flex items-center gap-3">
+
+          <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/15 text-xl text-violet-300">
+            <i class="fa-solid fa-user-shield"></i>
+          </span>
+
+          <div>
+            <h2
+              id="auth-title"
+              class="text-xl font-extrabold"
+            >
+              Create your account
+            </h2>
+
+            <p
+              id="auth-description"
+              class="mt-1 text-xs leading-5 text-slate-400"
+            >
+              UI preview · Account service abhi connected nahi hai.
+            </p>
+          </div>
+
+        </div>
+
+
+        <!-- AUTH MODE SWITCH -->
+
+        <div class="mb-5 grid grid-cols-2 rounded-xl border border-white/10 bg-brandDark p-1">
+
+          <button
+            id="tab-signup"
+            type="button"
+            class="rounded-lg bg-violet-700 px-3 py-2.5 text-sm font-bold text-white"
+          >
+            Sign Up
+          </button>
+
+          <button
+            id="tab-login"
+            type="button"
+            class="rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-400 hover:text-white"
+          >
+            Login
+          </button>
+
+        </div>
+
+
+        <form id="auth-form" class="space-y-4">
+
+          <div id="auth-name-wrap">
+
+            <label
+              for="auth-name"
+              class="eyebrow mb-1.5 block"
+            >
+              Business name
+            </label>
+
+            <input
+              id="auth-name"
+              class="field"
+              type="text"
+              maxlength="80"
+              autocomplete="organization"
+              placeholder="Your shop name"
+            >
+
+          </div>
+
+
+          <div id="auth-whatsapp-wrap">
+
+            <label
+              for="auth-whatsapp"
+              class="eyebrow mb-1.5 block"
+            >
+              WhatsApp number
+            </label>
+
+            <input
+              id="auth-whatsapp"
+              class="field"
+              type="tel"
+              inputmode="tel"
+              maxlength="20"
+              autocomplete="tel"
+              placeholder="+91 98765 43210"
+            >
+
+            <p class="mt-1.5 text-xs text-slate-500">
+              Optional for this UI preview.
+            </p>
+
+          </div>
+
+
+          <div>
+
+            <label
+              for="auth-email"
+              class="eyebrow mb-1.5 block"
+            >
+              Email address
+            </label>
+
+            <input
+              id="auth-email"
+              class="field"
+              type="email"
+              maxlength="254"
+              autocomplete="email"
+              placeholder="you@example.com"
+              required
+            >
+
+          </div>
+
+
+          <div>
+
+            <label
+              for="auth-password"
+              class="eyebrow mb-1.5 block"
+            >
+              Password
+            </label>
+
+            <input
+              id="auth-password"
+              class="field"
+              type="password"
+              minlength="8"
+              maxlength="128"
+              autocomplete="new-password"
+              placeholder="At least 8 characters"
+              required
+            >
+
+          </div>
+
+
+          <p
+            id="auth-error"
+            class="hidden text-sm leading-5 text-rose-300"
+            role="alert"
+          ></p>
+
+
+          <button
+            id="auth-submit"
+            type="submit"
+            class="primary-button w-full"
+          >
+            <i class="fa-solid fa-user-plus"></i>
+            Create Account
+          </button>
+
+        </form>
+
+
+        <div class="mt-5 rounded-xl border border-amber-300/10 bg-amber-300/5 p-3">
+
+          <p class="text-xs leading-5 text-amber-100/80">
+            <i class="fa-solid fa-circle-info mr-1"></i>
+            Demo mode: abhi account create ya login nahi hoga.
+            Supabase connect karne ke baad ye form real authentication karega.
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ACCOUNT PREVIEW MODAL -->
+
+  <div
+    id="account-modal"
+    class="modal-backdrop fixed inset-0 z-50 hidden overflow-y-auto p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="account-title"
+  >
+
+    <div class="flex min-h-full items-center justify-center">
+
+      <div class="modal-panel relative my-auto w-full max-w-sm rounded-2xl border border-white/10 bg-brandCard p-6 shadow-2xl">
+
+        <button
+          id="account-close"
+          type="button"
+          class="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-white/5 hover:text-white"
+          aria-label="Close account preview"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <span class="mb-4 grid h-12 w-12 place-items-center rounded-xl bg-violet-500/15 text-xl text-violet-300">
+          <i class="fa-solid fa-user"></i>
+        </span>
+
+        <h2 id="account-title" class="text-xl font-extrabold">
+          Your Account
+        </h2>
+
+        <p class="mt-2 text-sm leading-6 text-slate-400">
+          Signup aur login abhi demo mode mein hain. Supabase connect karne ke baad yahan account details aur business profile dikhenge.
+        </p>
+
+        <button
+          id="account-login"
+          type="button"
+          class="primary-button mt-5 w-full"
+        >
+          Continue to Login
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- JAVASCRIPT -->
+
+  <script>
+    "use strict";
+
+    const $ = (id) => document.getElementById(id);
+
+    let toastTimer = null;
+    let authMode = "signup";
+    let lastGeneratedReply = "";
+    let lastReviewLink = "";
+    let lastStandeeName = "";
+
+
+    /* -----------------------------------------
+       GENERAL HELPERS
+    ----------------------------------------- */
+
+    $("year").textContent = new Date().getFullYear();
+
+
+    function showToast(message, type = "info") {
+      const toast = $("toast");
+      const icon = $("toast-icon");
+
+      $("toast-message").textContent = message;
+
+      icon.className = "fa-solid mt-0.5 ";
+
+      if (type === "success") {
+        icon.classList.add("fa-circle-check", "text-emerald-300");
+      } else if (type === "error") {
+        icon.classList.add("fa-circle-exclamation", "text-rose-300");
+      } else {
+        icon.classList.add("fa-circle-info", "text-violet-300");
+      }
+
+      toast.classList.remove("hidden");
+
+      clearTimeout(toastTimer);
+
+      toastTimer = setTimeout(() => {
+        toast.classList.add("hidden");
+      }, 4500);
+    }
+
+
+    function hideToast() {
+      $("toast").classList.add("hidden");
+      clearTimeout(toastTimer);
+    }
+
+
+    $("toast-close").addEventListener("click", hideToast);
+
+
+    function showFieldError(id, message) {
+      $(id).textContent = message;
+      $(id).classList.remove("hidden");
+    }
+
+
+    function hideFieldError(id) {
+      $(id).textContent = "";
+      $(id).classList.add("hidden");
+    }
+
+
+    function setButtonLoading(button, loading, loadingText) {
+      if (loading) {
+        button.dataset.originalHtml = button.innerHTML;
+        button.disabled = true;
+
+        button.innerHTML =
+          '<i class="fa-solid fa-spinner fa-spin"></i> ' +
+          loadingText;
+      } else {
+        button.disabled = false;
+
+        if (button.dataset.originalHtml) {
+          button.innerHTML = button.dataset.originalHtml;
+          delete button.dataset.originalHtml;
+        }
+      }
+    }
+
+
+    function validReviewLink(value) {
+      try {
+        const url = new URL(value);
+
+        if (url.protocol !== "https:") {
+          return false;
+        }
+
+        const host = url.hostname.toLowerCase();
+
+        /*
+          Accept common Google Maps and review-link hosts.
+          Other Google-owned domains may need adding if your
+          particular business review link uses them.
+        */
+
+        return (
+          host === "google.com" ||
+          host.endsWith(".google.com") ||
+          host === "g.page" ||
+          host === "goo.gl" ||
+          host === "maps.app.goo.gl" ||
+          host === "business.google.com"
+        );
+
+      } catch (_) {
+        return false;
+      }
+    }
+
+
+    /* -----------------------------------------
+       MODAL HELPERS
+    ----------------------------------------- */
+
+    function openModal(id) {
+      const modal = $(id);
+
+      modal.classList.remove("hidden");
+      document.body.classList.add("modal-open");
+
+      const focusable = modal.querySelector(
+        "input:not([type=hidden]), button"
+      );
+
+      if (focusable) {
+        setTimeout(() => focusable.focus(), 50);
+      }
+    }
+
+
+    function closeModal(id) {
+      $(id).classList.add("hidden");
+
+      const anotherModalOpen =
+        !$("auth-modal").classList.contains("hidden") ||
+        !$("account-modal").classList.contains("hidden");
+
+      if (!anotherModalOpen) {
+        document.body.classList.remove("modal-open");
+      }
+    }
+
+
+    function openAuth(mode = "signup") {
+      closeModal("account-modal");
+
+      authMode = mode;
+
+      updateAuthMode();
+
+      hideFieldError("auth-error");
+
+      openModal("auth-modal");
+    }
+
+
+    function updateAuthMode() {
+      const signup = authMode === "signup";
+
+      $("auth-title").textContent = signup
+        ? "Create your account"
+        : "Welcome back";
+
+      $("auth-description").textContent = signup
+        ? "Create an account to manage your business profile."
+        : "Enter your details to log in.";
+
+      $("auth-name-wrap").classList.toggle("hidden", !signup);
+
+      $("auth-whatsapp-wrap").classList.toggle("hidden", !signup);
+
+      $("auth-name").required = signup;
+
+      $("auth-password").autocomplete = signup
+        ? "new-password"
+        : "current-password";
+
+      $("auth-submit").innerHTML = signup
+        ? '<i class="fa-solid fa-user-plus"></i> Create Account'
+        : '<i class="fa-solid fa-right-to-bracket"></i> Login';
+
+      $("tab-signup").className = signup
+        ? "rounded-lg bg-violet-700 px-3 py-2.5 text-sm font-bold text-white"
+        : "rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-400 hover:text-white";
+
+      $("tab-login").className = !signup
+        ? "rounded-lg bg-violet-700 px-3 py-2.5 text-sm font-bold text-white"
+        : "rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-400 hover:text-white";
+    }
+
+
+    $("login-open").addEventListener("click", () => {
+      openAuth("login");
+    });
+
+
+    $("signup-open").addEventListener("click", () => {
+      openAuth("signup");
+    });
+
+
+    $("pricing-signup").addEventListener("click", () => {
+      openAuth("signup");
+    });
+
+
+    $("tab-signup").addEventListener("click", () => {
+      authMode = "signup";
+      hideFieldError("auth-error");
+      updateAuthMode();
+    });
+
+
+    $("tab-login").addEventListener("click", () => {
+      authMode = "login";
+      hideFieldError("auth-error");
+      updateAuthMode();
+    });
+
+
+    $("auth-close").addEventListener("click", () => {
+      closeModal("auth-modal");
+    });
+
+
+    $("account-close").addEventListener("click", () => {
+      closeModal("account-modal");
+    });
+
+
+    $("account-button").addEventListener("click", () => {
+      openModal("account-modal");
+    });
+
+
+    $("account-login").addEventListener("click", () => {
+      openAuth("login");
+    });
+
+
+    /*
+      Close a modal when the backdrop itself is clicked.
+    */
+
+    ["auth-modal", "account-modal"].forEach((id) => {
+      $(id).addEventListener("click", (event) => {
+        if (event.target === $(id)) {
+          closeModal(id);
+        }
+      });
+    });
+
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeModal("auth-modal");
+        closeModal("account-modal");
+      }
+    });
+
+
+    /*
+      Demo-only auth form.
+      This intentionally does not store credentials,
+      create a user, or pretend that login succeeded.
+    */
+
+    $("auth-form").addEventListener("submit", (event) => {
       event.preventDefault();
 
-      const name = byId('shop-name').value.trim();
-      const link = byId('shop-link').value.trim();
-      const error = byId('qr-error');
+      hideFieldError("auth-error");
 
-      error.classList.add('hidden');
+      const name = $("auth-name").value.trim();
+      const whatsapp = $("auth-whatsapp").value.trim();
+      const email = $("auth-email").value.trim();
+      const password = $("auth-password").value;
 
-      let parsed;
-      try {
-        parsed = new URL(link);
-      } catch (_) {
-        error.textContent = 'Valid link paste karein, jaise https://...';
-        error.classList.remove('hidden');
+      if (authMode === "signup" && !name) {
+        showFieldError(
+          "auth-error",
+          "Please enter your business name."
+        );
+        $("auth-name").focus();
         return;
       }
 
-      if (!['http:', 'https:'].includes(parsed.protocol)) {
-        error.textContent = 'Link https:// ya http:// se shuru hona chahiye.';
-        error.classList.remove('hidden');
+      if (!email || !$("auth-email").validity.valid) {
+        showFieldError(
+          "auth-error",
+          "Please enter a valid email address."
+        );
+        $("auth-email").focus();
         return;
       }
+
+      if (password.length < 8) {
+        showFieldError(
+          "auth-error",
+          "Password must contain at least 8 characters."
+        );
+        $("auth-password").focus();
+        return;
+      }
+
+      if (whatsapp && !/^\+?[0-9\s()-]{8,20}$/.test(whatsapp)) {
+        showFieldError(
+          "auth-error",
+          "Please enter a valid WhatsApp number."
+        );
+        $("auth-whatsapp").focus();
+        return;
+      }
+
+      showFieldError(
+        "auth-error",
+        "UI preview only: Supabase authentication has not been connected yet. No account was created and no login was performed."
+      );
+    });
+
+
+    /* -----------------------------------------
+       QR GENERATOR
+    ----------------------------------------- */
+
+    $("qr-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      hideFieldError("qr-error");
+
+      const name = $("shop-name").value.trim();
+      const link = $("shop-link").value.trim();
+      const button = $("qr-generate");
 
       if (!name) {
-        error.textContent = 'Pehle business ka naam enter karein.';
-        error.classList.remove('hidden');
+        showFieldError(
+          "qr-error",
+          "Pehle business ka naam enter karein."
+        );
+        $("shop-name").focus();
         return;
       }
 
-      byId('preview-title').textContent = name;
-      byId('qr-image').src = 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=12&data=' + encodeURIComponent(link);
-      byId('open-review-link').href = link;
-      byId('preview-section').classList.remove('hidden');
-      byId('preview-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (!validReviewLink(link)) {
+        showFieldError(
+          "qr-error",
+          "Valid HTTPS Google Review link paste karein."
+        );
+        $("shop-link").focus();
+        return;
+      }
+
+      setButtonLoading(
+        button,
+        true,
+        "QR generate ho raha hai..."
+      );
+
+      try {
+        const preview = $("preview-section");
+        const image = $("qr-image");
+        const loader = $("qr-image-loading");
+
+        $("preview-title").textContent = name;
+
+        image.classList.add("hidden");
+        loader.classList.remove("hidden");
+
+        preview.classList.remove("hidden");
+
+        lastReviewLink = link;
+        lastStandeeName = name;
+
+        $("open-review-link").href = link;
+
+        /*
+          Encode the destination as a URL parameter.
+          The image itself is provided by a third-party QR service.
+        */
+
+        const qrUrl =
+          "https://api.qrserver.com/v1/create-qr-code/" +
+          "?size=320x320&margin=12&data=" +
+          encodeURIComponent(link);
+
+        await new Promise((resolve, reject) => {
+          let completed = false;
+
+          const timeout = setTimeout(() => {
+            finish(new Error("QR image request timed out."));
+          }, 15000);
+
+          function finish(error) {
+            if (completed) return;
+
+            completed = true;
+            clearTimeout(timeout);
+
+            image.onload = null;
+            image.onerror = null;
+
+            if (error) {
+              reject(error);
+            } else {
+              resolve();
+            }
+          }
+
+          image.onload = () => finish();
+          image.onerror = () => {
+            finish(new Error("Could not load the QR image."));
+          };
+
+          image.src = qrUrl;
+
+          if (image.complete && image.naturalWidth > 0) {
+            finish();
+          }
+        });
+
+        image.classList.remove("hidden");
+        loader.classList.add("hidden");
+
+        showToast(
+          "QR standee ready! Scan karke link verify kar lein.",
+          "success"
+        );
+
+        preview.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+
+      } catch (error) {
+        console.error("QR generation failed:", error);
+
+        $("preview-section").classList.add("hidden");
+
+        showFieldError(
+          "qr-error",
+          "QR image load nahi hui. Internet check karein aur dobara try karein."
+        );
+
+        showToast(
+          "QR generate nahi ho paya. Please try again.",
+          "error"
+        );
+
+      } finally {
+        setButtonLoading(button, false);
+      }
     });
 
-    byId('reset-qr').addEventListener('click', function () {
-      byId('qr-form').reset();
-      byId('preview-section').classList.add('hidden');
-      byId('qr-image').removeAttribute('src');
-      byId('qr-error').classList.add('hidden');
-      byId('setup-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    /* -----------------------------------------
+       RESET QR
+    ----------------------------------------- */
+
+    $("reset-qr").addEventListener("click", () => {
+      $("qr-form").reset();
+
+      $("preview-section").classList.add("hidden");
+
+      $("qr-image").removeAttribute("src");
+      $("qr-image").classList.add("hidden");
+
+      $("qr-image-loading").classList.remove("hidden");
+
+      hideFieldError("qr-error");
+
+      lastReviewLink = "";
+      lastStandeeName = "";
+
+      $("setup-card").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
     });
 
-    byId('print-standee').addEventListener('click', function () {
+
+    /* -----------------------------------------
+       PRINT / SAVE AS PDF
+    ----------------------------------------- */
+
+    $("print-standee").addEventListener("click", () => {
+      if (
+        !lastReviewLink ||
+        !$("qr-image").complete ||
+        $("qr-image").naturalWidth === 0
+      ) {
+        showToast(
+          "Pehle QR image successfully generate karein.",
+          "error"
+        );
+        return;
+      }
+
       window.print();
     });
 
-    byId('reply-button').addEventListener('click', function () {
-      const review = byId('review-text').value.trim();
-      const lang = byId('reply-language').value;
+
+    /* -----------------------------------------
+       SAMPLE AI REPLY
+    ----------------------------------------- */
+
+    $("reply-button").addEventListener("click", () => {
+      hideFieldError("reply-error");
+
+      const review = $("review-text").value.trim();
+      const language = $("reply-language").value;
 
       if (!review) {
-        byId('review-text').focus();
-        byId('reply-result').classList.remove('hidden');
-        byId('reply-output').textContent = 'Pehle customer ka review paste karein, phir sample reply generate karein.';
+        showFieldError(
+          "reply-error",
+          "Pehle customer ka review paste karein."
+        );
+
+        $("review-text").focus();
         return;
       }
 
-      let reply;
-      const negative = /bad|poor|worst|late|rude|dirty|slow|खराब|देरी|बुरा|गंदा|नाराज़|नाराज/i.test(review);
+      if (review.length > 1000) {
+        showFieldError(
+          "reply-error",
+          "Review 1000 characters se chhota hona chahiye."
+        );
+        return;
+      }
 
-      if (lang === 'hindi') {
+      const negativePattern =
+        /\b(bad|poor|worst|late|rude|dirty|slow|terrible|disappointed|unhappy|broken|wrong|refund|complaint)\b|खराब|देरी|बुरा|गंदा|नाराज़|नाराज|शिकायत|बेकार|निराश/i;
+
+      const negative = negativePattern.test(review);
+
+      let reply = "";
+
+      if (language === "hindi") {
         reply = negative
-          ? 'आपके अनुभव के लिए हमें खेद है। आपने अपनी बात साझा की, इसके लिए धन्यवाद। कृपया हमें सीधे संपर्क करने का मौका दें ताकि हम आपकी समस्या को समझकर सुधार कर सकें।'
-          : 'अपना अनुभव साझा करने और हमें समय देने के लिए आपका बहुत धन्यवाद। आपकी प्रतिक्रिया हमारे लिए महत्वपूर्ण है और हमें अपनी सेवा बेहतर बनाने में मदद करती है।';
-      } else if (lang === 'english') {
+          ? "आपके अनुभव के लिए हमें खेद है। अपनी प्रतिक्रिया साझा करने के लिए धन्यवाद। कृपया हमसे सीधे संपर्क करें, ताकि हम आपकी समस्या को समझकर उचित समाधान खोज सकें।"
+          : "अपना अनुभव साझा करने के लिए आपका बहुत धन्यवाद। आपकी प्रतिक्रिया हमारे लिए महत्वपूर्ण है और हमें अपनी सेवाओं को बेहतर बनाने में मदद करती है। हम फिर से आपकी सेवा करने का अवसर मिलने की उम्मीद करते हैं।";
+
+      } else if (language === "english") {
         reply = negative
-          ? 'Thank you for sharing your feedback. We’re sorry your experience did not meet expectations. Please contact us directly so we can understand the issue and work toward improving it.'
-          : 'Thank you for taking the time to share your experience. We appreciate your feedback and will use it to keep improving our service.';
+          ? "We're sorry your experience did not meet expectations. Thank you for bringing this to our attention. Please contact the business directly so the team can understand the issue and work toward a resolution."
+          : "Thank you for taking the time to share your experience. We truly appreciate your feedback and are glad you visited us. We look forward to serving you again.";
+
       } else {
         reply = negative
-          ? 'Aapke experience ke liye humein afsos hai. Feedback share karne ke liye thank you. Please humein directly contact karein, taaki hum issue samajh kar service improve kar sakein.'
-          : 'Apna experience share karne ke liye bahut thank you! Aapka feedback hamare liye important hai aur humein apni service aur better banane mein help karta hai.';
+          ? "Aapke experience ke liye humein afsos hai. Feedback share karne ke liye thank you. Please shop management se directly contact karein, taaki issue samajhkar suitable solution find kar sakein."
+          : "Apna experience share karne ke liye bahut thank you! Aapka feedback hamare liye important hai. Humein khushi hogi agar humein aapki dobara service karne ka mauka mile.";
       }
 
-      byId('reply-output').textContent = reply;
-      byId('reply-result').classList.remove('hidden');
+      lastGeneratedReply = reply;
+
+      $("reply-output").textContent = reply;
+      $("reply-result").classList.remove("hidden");
+
+      showToast(
+        "Sample reply ready. Ye demo hai, live AI response nahi.",
+        "success"
+      );
     });
 
-    byId('copy-reply').addEventListener('click', async function () {
-      const text = byId('reply-output').textContent;
+
+    /* -----------------------------------------
+       COPY REPLY
+    ----------------------------------------- */
+
+    $("copy-reply").addEventListener("click", async function () {
+      const text = lastGeneratedReply.trim();
+
+      if (!text) {
+        showToast("Copy karne ke liye reply generate karein.", "error");
+        return;
+      }
 
       try {
-        await navigator.clipboard.writeText(text);
-        this.innerHTML = '<i class="fa-solid fa-check mr-1"></i>Copied!';
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          throw new Error("Clipboard API unavailable.");
+        }
+
+        this.innerHTML =
+          '<i class="fa-solid fa-check"></i> Copied!';
+
+        showToast("Reply clipboard par copy ho gaya.", "success");
+
+        setTimeout(() => {
+          this.innerHTML =
+            '<i class="fa-regular fa-copy"></i> Copy reply';
+        }, 1800);
+
       } catch (_) {
-        const area = document.createElement('textarea');
+        /*
+          Fallback for browsers where Clipboard API is unavailable.
+        */
+
+        const area = document.createElement("textarea");
+
         area.value = text;
+        area.setAttribute("readonly", "");
+
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+
         document.body.appendChild(area);
+
         area.select();
-        document.execCommand('copy');
+
+        let copied = false;
+
+        try {
+          copied = document.execCommand("copy");
+        } catch (_) {
+          copied = false;
+        }
+
         area.remove();
-        this.textContent = 'Copied!';
+
+        if (copied) {
+          showToast("Reply clipboard par copy ho gaya.", "success");
+        } else {
+          showToast(
+            "Automatic copy unavailable. Reply ko manually select karein.",
+            "error"
+          );
+        }
       }
     });
+
+
+    /* -----------------------------------------
+       INITIAL STATE
+    ----------------------------------------- */
+
+    updateAuthMode();
+
   </script>
+
 </body>
 </html>
