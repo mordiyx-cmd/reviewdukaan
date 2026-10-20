@@ -1,282 +1,839 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0B0F19">
+  <meta name="description" content="ReviewDukaan helps local businesses create Google review QR stands, draft review replies, and manage their online reputation.">
+  <meta name="color-scheme" content="dark">
+  <title>ReviewDukaan — Your Reviews. Your Growth.</title>
 
-  <title>ReviewDukaan — A MORDIYX AI Venture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-  <meta
-    name="description"
-    content="ReviewDukaan: local businesses ke liye Google review QR standee aur customer review reply assistant."
-  >
-
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-  >
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brandDark: '#0B0F19',
-            brandViolet: '#6D28D9',
-            brandPurple: '#4C1D95',
-            brandCard: '#1E293B'
-          }
-        }
-      }
-    };
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
   <style>
     :root {
-      color-scheme: dark;
-      --brand-dark: #0B0F19;
-      --brand-violet: #6D28D9;
-      --brand-card: #1E293B;
+      --bg: #0B0F19;
+      --surface: #111827;
+      --card: #172033;
+      --card2: #1E293B;
+      --purple: #6D28D9;
+      --purple-dark: #4C1D95;
+      --purple-light: #A78BFA;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+      --border: rgba(148,163,184,.16);
+      --green: #34D399;
+      --red: #F87171;
+      --yellow: #FBBF24;
+      --radius: 16px;
     }
+
+    * { box-sizing: border-box; }
 
     html {
       scroll-behavior: smooth;
-      scroll-padding-top: 90px;
+      scroll-padding-top: 82px;
     }
 
     body {
-      background: var(--brand-dark);
-      min-width: 320px;
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 50% -15%, rgba(109,40,217,.19), transparent 48%),
+        var(--bg);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    button,
-    input,
-    textarea,
-    select {
-      -webkit-tap-highlight-color: transparent;
-    }
+    button, input, select, textarea { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { cursor: pointer; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    a { color: inherit; }
+    img, canvas { max-width: 100%; }
 
-    button:focus-visible,
-    a:focus-visible,
-    input:focus-visible,
-    textarea:focus-visible,
-    select:focus-visible {
-      outline: 2px solid #C4B5FD;
+    :focus-visible {
+      outline: 2px solid var(--purple-light);
       outline-offset: 3px;
     }
 
-    .glass-header {
-      background: rgba(11, 15, 25, .92);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+    .shell {
+      width: min(1160px, calc(100% - 32px));
+      margin: auto;
     }
 
-    .brand-gradient {
-      background: linear-gradient(110deg, #6D28D9, #7E22CE);
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(11,15,25,.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
     }
 
-    .brand-gradient-text {
-      background: linear-gradient(90deg, #C4B5FD, #F0ABFC);
+    .nav {
+      min-height: 70px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+      text-decoration: none;
+    }
+
+    .brand-icon {
+      width: 39px;
+      height: 39px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      border-radius: 12px;
+      background: linear-gradient(135deg,var(--purple),var(--purple-dark));
+      box-shadow: 0 6px 25px rgba(109,40,217,.25);
+      font-size: 21px;
+      font-weight: 900;
+    }
+
+    .brand-name {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -.6px;
+    }
+
+    .gradient {
+      background: linear-gradient(100deg,#DDD6FE,#A78BFA,#8B5CF6);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
 
-    .card-surface {
-      background: #1E293B;
-      border: 1px solid rgba(255, 255, 255, .09);
-      box-shadow: 0 14px 38px rgba(0, 0, 0, .15);
+    .brand-sub {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
     }
 
-    .field {
-      display: block;
-      width: 100%;
-      min-height: 46px;
-      border: 1px solid #334155;
-      border-radius: 12px;
-      background: #0B0F19;
-      padding: 12px 14px;
-      color: #fff;
-      font-size: 14px;
-      outline: none;
-      transition: border-color .2s, box-shadow .2s;
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .field::placeholder {
-      color: #64748B;
+    .nav-links {
+      display: flex;
+      gap: 17px;
+      align-items: center;
+      margin-right: 7px;
     }
 
-    .field:focus {
-      border-color: #A78BFA;
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, .12);
+    .nav-links a {
+      color: #CBD5E1;
+      font-size: 12px;
+      text-decoration: none;
     }
 
-    .primary-button {
+    .nav-links a:hover { color: white; }
+
+    .btn {
+      min-height: 41px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      min-height: 46px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      background: linear-gradient(110deg, #6D28D9, #6B21A8);
+      padding: 10px 15px;
+      border: 1px solid transparent;
+      border-radius: 11px;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      transition: filter .15s, transform .15s, border-color .15s;
+    }
+
+    .btn:hover { filter: brightness(1.12); }
+    .btn:active { transform: scale(.985); }
+
+    .primary {
       color: white;
-      font-size: 14px;
-      font-weight: 750;
-      transition: filter .2s, transform .2s, opacity .2s;
+      background: linear-gradient(135deg,var(--purple),var(--purple-dark));
+      box-shadow: 0 5px 20px rgba(109,40,217,.16);
     }
 
-    .primary-button:hover {
-      filter: brightness(1.14);
-    }
-
-    .primary-button:active {
-      transform: scale(.99);
-    }
-
-    .primary-button:disabled {
-      cursor: wait;
-      opacity: .65;
-    }
-
-    .secondary-button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      min-height: 42px;
-      padding: 10px 14px;
-      border: 1px solid #475569;
-      border-radius: 10px;
-      background: rgba(15, 23, 42, .45);
+    .secondary {
       color: #E2E8F0;
-      font-size: 13px;
-      font-weight: 650;
-      transition: background .2s;
+      background: #172033;
+      border-color: var(--border);
     }
 
-    .secondary-button:hover {
-      background: #334155;
+    .quiet {
+      color: #C4B5FD;
+      background: rgba(109,40,217,.12);
+      border-color: rgba(139,92,246,.24);
+    }
+
+    .danger {
+      color: #FCA5A5;
+      background: rgba(248,113,113,.08);
+      border-color: rgba(248,113,113,.2);
+    }
+
+    .full { width: 100%; }
+
+    .hero {
+      padding: 48px 0 30px;
+      text-align: center;
     }
 
     .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 11px;
+      color: #C4B5FD;
+      background: rgba(109,40,217,.12);
+      border: 1px solid rgba(139,92,246,.25);
+      border-radius: 999px;
       font-size: 10px;
-      font-weight: 800;
+      font-weight: 850;
+      letter-spacing: .08em;
       text-transform: uppercase;
-      letter-spacing: .13em;
-      color: #CBD5E1;
     }
 
-    .muted {
-      color: #94A3B8;
-    }
-
-    .modal-backdrop {
-      background: rgba(2, 6, 23, .82);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-
-    .modal-panel {
-      animation: modalIn .18s ease-out;
-    }
-
-    @keyframes modalIn {
-      from {
-        opacity: 0;
-        transform: translateY(8px) scale(.99);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    .status-dot {
-      display: inline-block;
+    .dot {
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: #34D399;
+      background: var(--purple-light);
+      display: inline-block;
     }
 
-    .toast {
-      animation: toastIn .2s ease-out;
+    .hero h1 {
+      margin: 18px auto 12px;
+      font-size: clamp(34px,5.6vw,58px);
+      line-height: 1.07;
+      letter-spacing: -.055em;
+      font-weight: 900;
     }
 
-    @keyframes toastIn {
-      from {
-        opacity: 0;
-        transform: translateY(-6px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .hero p {
+      max-width: 610px;
+      margin: auto;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
     }
 
-    .standee {
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .trust-line {
+      margin-top: 18px;
+      color: #64748B;
+      font-size: 11px;
+    }
+
+    .section {
+      margin-bottom: 19px;
+      scroll-margin-top: 88px;
+    }
+
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 13px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: 21px;
+      font-weight: 900;
+      letter-spacing: -.6px;
+    }
+
+    .section-heading p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .panel {
+      min-width: 0;
+      padding: 19px;
+      background: linear-gradient(150deg,rgba(30,41,59,.88),rgba(17,24,39,.96));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 14px 38px rgba(0,0,0,.11);
+    }
+
+    .panel-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 17px;
+    }
+
+    .panel-heading h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 850;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .step {
+      width: 31px;
+      height: 31px;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      color: #DDD6FE;
+      background: rgba(109,40,217,.18);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2,minmax(0,1fr));
+      gap: 17px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3,minmax(0,1fr));
+      gap: 12px;
+    }
+
+    .field { margin-bottom: 13px; }
+
+    .field label {
+      display: block;
+      margin-bottom: 7px;
+      color: #CBD5E1;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .input, .select, .textarea {
+      display: block;
       width: 100%;
-      max-width: 310px;
-      margin-inline: auto;
-      border: 4px solid #6D28D9;
-      border-radius: 16px;
-      background: white;
-      padding: 24px 18px;
+      min-height: 43px;
+      padding: 11px 12px;
+      color: #F8FAFC;
+      background: rgba(11,15,25,.8);
+      border: 1px solid rgba(148,163,184,.23);
+      border-radius: 10px;
+      outline: none;
+      font-size: 12px;
+    }
+
+    .input:focus, .select:focus, .textarea:focus {
+      border-color: #8B5CF6;
+      box-shadow: 0 0 0 3px rgba(139,92,246,.12);
+    }
+
+    .input::placeholder, .textarea::placeholder { color: #64748B; }
+
+    .select option {
+      color: white;
+      background: #111827;
+    }
+
+    .textarea {
+      min-height: 110px;
+      line-height: 1.7;
+      resize: vertical;
+    }
+
+    .hint {
+      margin-top: 6px;
+      color: #94A3B8;
+      font-size: 10px;
+      line-height: 1.6;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 9px;
+      color: #C4B5FD;
+      background: rgba(109,40,217,.13);
+      border: 1px solid rgba(139,92,246,.2);
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .pill-green {
+      color: #6EE7B7;
+      background: rgba(52,211,153,.08);
+      border-color: rgba(52,211,153,.2);
+    }
+
+    .pill-yellow {
+      color: #FDE68A;
+      background: rgba(251,191,36,.08);
+      border-color: rgba(251,191,36,.2);
+    }
+
+    .divider {
+      height: 1px;
+      margin: 17px 0;
+      background: var(--border);
+    }
+
+    .business-layout {
+      display: grid;
+      grid-template-columns: minmax(0,.94fr) minmax(0,1.06fr);
+      gap: 17px;
+    }
+
+    .qr-preview {
+      padding: 21px 15px;
+      color: #111827;
       text-align: center;
-      color: #0F172A;
+      background: white;
+      border-radius: 13px;
+    }
+
+    .standee-brand {
+      color: #6D28D9;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+
+    .standee-title {
+      margin-top: 11px;
+      color: #111827;
+      font-size: 24px;
+      font-weight: 900;
+      line-height: 1.2;
       overflow-wrap: anywhere;
     }
 
-    .standee-qr {
-      width: 176px;
-      height: 176px;
-      object-fit: contain;
-      margin: 18px auto;
+    .standee-subtitle {
+      margin-top: 7px;
+      color: #475569;
+      font-size: 12px;
     }
 
-    .hidden {
-      display: none !important;
+    #qrcode {
+      width: 196px;
+      min-height: 196px;
+      display: grid;
+      place-items: center;
+      margin: 17px auto 13px;
+      padding: 7px;
+      background: white;
+      border: 1px solid #E2E8F0;
+      border-radius: 10px;
     }
 
-    body.modal-open {
+    #qrcode canvas, #qrcode img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .qr-placeholder {
+      width: 175px;
+      height: 175px;
+      display: grid;
+      place-items: center;
+      padding: 17px;
+      color: #64748B;
+      background: #F1F5F9;
+      border: 1px dashed #CBD5E1;
+      border-radius: 9px;
+      font-size: 12px;
+    }
+
+    .standee-footer {
+      color: #475569;
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(2,minmax(0,1fr));
+      gap: 8px;
+      margin-top: 11px;
+    }
+
+    .notice {
+      padding: 11px 12px;
+      color: #C4B5FD;
+      background: rgba(109,40,217,.09);
+      border: 1px solid rgba(139,92,246,.18);
+      border-radius: 10px;
+      font-size: 11px;
+      line-height: 1.65;
+    }
+
+    .notice.warning {
+      color: #FDE68A;
+      background: rgba(251,191,36,.06);
+      border-color: rgba(251,191,36,.17);
+    }
+
+    .notice.success {
+      color: #A7F3D0;
+      background: rgba(52,211,153,.06);
+      border-color: rgba(52,211,153,.17);
+    }
+
+    /* Dashboard */
+    .dashboard-card {
+      min-width: 0;
+      padding: 15px;
+      background: rgba(17,24,39,.8);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+    }
+
+    .dashboard-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .dashboard-value {
+      margin-top: 9px;
+      font-size: 22px;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .dashboard-detail {
+      margin-top: 5px;
+      color: #94A3B8;
+      font-size: 10px;
+      line-height: 1.6;
+    }
+
+    .trial-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      padding: 18px;
+      background:
+        radial-gradient(ellipse at 0 0,rgba(109,40,217,.2),transparent 65%),
+        #111827;
+      border: 1px solid rgba(139,92,246,.27);
+      border-radius: var(--radius);
+    }
+
+    .trial-banner h3 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .trial-banner p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .trial-progress {
+      height: 6px;
+      margin-top: 13px;
       overflow: hidden;
+      background: #263247;
+      border-radius: 999px;
     }
 
-    @media (max-width: 420px) {
-      .brand-name {
-        font-size: 16px;
-      }
+    .trial-progress-fill {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg,#6D28D9,#A78BFA);
+      border-radius: inherit;
+      transition: width .3s;
+    }
 
-      .brand-subtitle {
-        font-size: 8px;
-        letter-spacing: .13em;
-      }
+    /* AI */
+    .ai-grid {
+      display: grid;
+      grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr);
+      gap: 15px;
+    }
 
-      .header-actions button {
-        padding-inline: 10px;
-        font-size: 12px;
-      }
+    .ai-box {
+      min-width: 0;
+      padding: 15px;
+      background: rgba(11,15,25,.35);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+    }
+
+    .result-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .result-head h4 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .pricing {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 13px;
+      padding: 15px;
+      margin-top: 13px;
+      background: rgba(109,40,217,.1);
+      border: 1px solid rgba(139,92,246,.22);
+      border-radius: 12px;
+    }
+
+    .pricing strong {
+      display: block;
+      font-size: 16px;
+    }
+
+    .pricing span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.6;
+    }
+
+    /* Account */
+    .account-grid {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+      gap: 15px;
+    }
+
+    .account-list {
+      display: grid;
+      gap: 0;
+    }
+
+    .account-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .account-row:last-child { border-bottom: 0; }
+
+    .account-row span:first-child { color: var(--muted); }
+
+    .footer {
+      margin-top: 25px;
+      padding: 25px 0 35px;
+      color: #64748B;
+      text-align: center;
+      font-size: 11px;
+      line-height: 1.9;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer strong { color: #A78BFA; }
+
+    .hidden { display: none !important; }
+
+    /* Dialog */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 17px;
+      overflow-y: auto;
+      background: rgba(2,6,23,.8);
+      backdrop-filter: blur(7px);
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      width: min(440px,100%);
+      max-height: 92vh;
+      overflow: auto;
+      padding: 23px;
+      background: #111827;
+      border: 1px solid rgba(139,92,246,.27);
+      border-radius: 17px;
+      box-shadow: 0 25px 90px rgba(0,0,0,.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 19px;
+    }
+
+    .modal-header h2 {
+      margin: 10px 0 0;
+      font-size: 23px;
+      font-weight: 900;
+    }
+
+    .close-btn {
+      width: 34px;
+      height: 34px;
+      color: #CBD5E1;
+      background: #1E293B;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+    }
+
+    .form-message {
+      display: none;
+      margin-bottom: 13px;
+      padding: 11px;
+      color: #FCA5A5;
+      background: rgba(248,113,113,.08);
+      border: 1px solid rgba(248,113,113,.2);
+      border-radius: 9px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .form-message.visible { display: block; }
+
+    .switch-text {
+      margin-top: 15px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .text-button {
+      padding: 0;
+      color: #C4B5FD;
+      background: none;
+      border: 0;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-weight: 800;
+    }
+
+    .text-link {
+      color: #A78BFA;
+      font-size: 11px;
+      background: none;
+      border: 0;
+      text-decoration: underline;
+    }
+
+    /* Toasts */
+    #toast-region {
+      position: fixed;
+      right: 15px;
+      bottom: 15px;
+      z-index: 200;
+      display: grid;
+      gap: 8px;
+      width: min(365px,calc(100vw - 30px));
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 12px 14px;
+      color: white;
+      background: #1E293B;
+      border: 1px solid rgba(139,92,246,.35);
+      border-radius: 11px;
+      box-shadow: 0 12px 35px rgba(0,0,0,.35);
+      font-size: 12px;
+      line-height: 1.6;
+      animation: toast-in .2s ease-out;
+    }
+
+    .toast.success { border-color: rgba(52,211,153,.5); }
+    .toast.error { border-color: rgba(248,113,113,.5); }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(7px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media(max-width:850px) {
+      .nav-links { display: none; }
+      .business-layout, .ai-grid, .account-grid { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .hero { padding-top: 35px; }
+    }
+
+    @media(max-width:560px) {
+      .shell { width: calc(100% - 22px); }
+      .nav { min-height: 64px; }
+      .brand-name { font-size: 16px; }
+      .brand-sub { font-size: 9px; }
+      .brand-icon { width: 35px; height: 35px; }
+      .nav-actions { gap: 5px; }
+      .nav-actions .btn { min-height: 35px; padding: 7px 9px; font-size: 10px; }
+      #user-status { display: none !important; }
+      .hero { padding: 30px 0 24px; }
+      .hero h1 { font-size: clamp(32px,9vw,44px); }
+      .hero p { font-size: 13px; }
+      .panel { padding: 14px; }
+      .section-heading h2 { font-size: 19px; }
+      .trial-banner { align-items: flex-start; flex-direction: column; }
+      .action-grid { grid-template-columns: 1fr 1fr; }
+      .pricing { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media(max-width:360px) {
+      .brand-sub { display: none; }
+      .nav-actions .btn { padding: 7px; }
+      .action-grid { grid-template-columns: 1fr; }
     }
 
     @media print {
-      @page {
-        size: A4 portrait;
-        margin: 12mm;
-      }
+      @page { size: A5 portrait; margin: 8mm; }
 
-      body {
-        background: white !important;
-      }
-
-      body * {
-        visibility: hidden !important;
-      }
+      body * { visibility: hidden !important; }
 
       #standee-print-area,
       #standee-print-area * {
@@ -284,1417 +841,1392 @@
       }
 
       #standee-print-area {
-        display: block !important;
         position: absolute !important;
-        left: 0 !important;
         top: 0 !important;
+        left: 0 !important;
         width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 auto !important;
+        padding: 12mm 5mm !important;
+        color: #111827 !important;
+        background: white !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 10px !important;
         box-shadow: none !important;
-        border: 3px solid #6D28D9 !important;
-        print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
 
-      .no-print {
-        display: none !important;
+      #qrcode {
+        margin: 12mm auto !important;
+        border: 0 !important;
       }
+
+      .standee-title { font-size: 27px !important; }
+      .standee-subtitle { font-size: 14px !important; }
+      .standee-footer { font-size: 12px !important; }
     }
   </style>
 </head>
 
-<body class="min-h-screen bg-brandDark font-sans text-white antialiased">
-
-  <!-- HEADER -->
-
-  <header class="glass-header sticky top-0 z-40 border-b border-white/10 px-3 py-3 sm:px-4">
-    <div class="mx-auto flex max-w-5xl items-center justify-between gap-2">
-
-      <a href="#" class="flex min-w-0 items-center gap-2.5" aria-label="ReviewDukaan home">
-
-        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl brand-gradient text-sm font-black shadow-lg shadow-violet-950/40">
-          M
-        </span>
-
-        <span class="min-w-0">
-          <span class="brand-name block text-lg font-extrabold tracking-tight">
-            Review<span class="text-violet-400">Dukaan</span>
-          </span>
-
-          <span class="brand-subtitle block text-[9px] font-semibold uppercase tracking-[.2em] text-slate-400">
-            A MORDIYX AI Venture
-          </span>
-        </span>
-
+<body>
+  <header class="topbar">
+    <div class="shell nav">
+      <a href="#" class="brand" aria-label="ReviewDukaan home">
+        <div class="brand-icon">R</div>
+        <div>
+          <div class="brand-name">Review<span class="gradient">Dukaan</span></div>
+          <div class="brand-sub">A MORDIYX AI Venture</div>
+        </div>
       </a>
 
-      <div class="header-actions flex shrink-0 items-center gap-2">
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#dashboard">Dashboard</a>
+        <a href="#qr-builder">QR Standee</a>
+        <a href="#ai-workspace">AI Replies</a>
+        <a href="#plans">Plans</a>
+      </nav>
 
-        <button
-          id="login-open"
-          type="button"
-          class="secondary-button"
-        >
-          Login
-        </button>
-
-        <button
-          id="signup-open"
-          type="button"
-          class="primary-button min-h-[40px] px-3 py-2"
-        >
-          Sign Up
-        </button>
-
-        <button
-          id="account-button"
-          type="button"
-          class="secondary-button hidden"
-        >
-          <i class="fa-solid fa-user"></i>
-          Account
-        </button>
-
+      <div class="nav-actions">
+        <span id="user-status" class="muted hidden"></span>
+        <button id="login-open" class="btn secondary" type="button">Login</button>
+        <button id="signup-open" class="btn primary" type="button">Get Started</button>
+        <button id="logout-btn" class="btn danger hidden" type="button">Logout</button>
       </div>
     </div>
   </header>
 
-
-  <!-- MAIN -->
-
-  <main class="mx-auto max-w-5xl px-4 py-8 sm:py-11">
-
-    <!-- HERO -->
-
-    <section class="mx-auto max-w-3xl text-center">
-
-      <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-400/10 px-3 py-1.5 text-xs font-semibold text-violet-200">
-        <i class="fa-solid fa-store"></i>
-        Local businesses ke liye
-      </div>
-
-      <h1 class="text-3xl font-black leading-tight tracking-tight sm:text-5xl">
-        Google Reviews ko
-        <span class="brand-gradient-text">aasani se manage</span>
-        karein
-      </h1>
-
-      <p class="mx-auto mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-        Apni dukaan ke liye review QR standee banayein aur customer reviews ke professional replies ka demo dekhein.
-        Honest feedback invite karein—rating ya sales ki guarantee nahi.
-      </p>
-
-    </section>
-
-
-    <!-- GLOBAL NOTIFICATION -->
-
-    <div
-      id="toast"
-      class="toast fixed left-4 right-4 top-[82px] z-[70] mx-auto hidden max-w-lg rounded-xl border border-white/10 bg-slate-900 p-4 shadow-2xl"
-      role="status"
-      aria-live="polite"
-    >
-      <div class="flex items-start gap-3">
-        <i id="toast-icon" class="fa-solid fa-circle-info mt-0.5 text-violet-300"></i>
-        <p id="toast-message" class="text-sm leading-5 text-slate-200"></p>
-        <button
-          id="toast-close"
-          type="button"
-          class="ml-auto text-slate-400 hover:text-white"
-          aria-label="Dismiss notification"
-        >
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-    </div>
-
-
-    <!-- MAIN CARDS -->
-
-    <section class="mx-auto mt-8 grid max-w-4xl gap-5 md:grid-cols-2">
-
-      <!-- QR CARD -->
-
-      <div
-        id="setup-card"
-        class="card-surface rounded-2xl p-5 sm:p-6"
-      >
-
-        <div class="mb-5 flex items-center gap-3">
-
-          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-300">
-            <i class="fa-solid fa-qrcode"></i>
-          </span>
-
-          <div>
-            <h2 class="font-bold">Free QR Standee Maker</h2>
-            <p class="text-xs text-slate-400">
-              Apni details enter karein
-            </p>
-          </div>
-
-        </div>
-
-
-        <form id="qr-form" class="space-y-4">
-
-          <div>
-            <label
-              for="shop-name"
-              class="eyebrow mb-1.5 block"
-            >
-              Dukaan / Business ka naam
-            </label>
-
-            <input
-              id="shop-name"
-              class="field"
-              required
-              maxlength="80"
-              type="text"
-              autocomplete="organization"
-              placeholder="e.g. Raj Bakery & Sweets"
-            >
-          </div>
-
-
-          <div>
-            <label
-              for="shop-link"
-              class="eyebrow mb-1.5 block"
-            >
-              Google Review / Profile link
-            </label>
-
-            <input
-              id="shop-link"
-              class="field"
-              required
-              maxlength="2048"
-              type="url"
-              inputmode="url"
-              autocomplete="url"
-              placeholder="https://..."
-            >
-
-            <p class="mt-1.5 text-xs leading-5 text-slate-500">
-              Apna Google review link paste karein. QR banane ke liye internet zaroori hai.
-            </p>
-          </div>
-
-
-          <button
-            id="qr-generate"
-            class="primary-button w-full"
-            type="submit"
-          >
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            Generate QR Standee
-          </button>
-
-          <p
-            id="qr-error"
-            class="hidden text-sm leading-5 text-rose-300"
-            role="alert"
-          ></p>
-
-        </form>
-
-      </div>
-
-
-      <!-- AI REPLY CARD -->
-
-      <div class="card-surface rounded-2xl p-5 sm:p-6">
-
-        <div class="mb-5 flex items-center gap-3">
-
-          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
-            <i class="fa-solid fa-comment-dots"></i>
-          </span>
-
-          <div>
-            <h2 class="font-bold">AI Reply Preview</h2>
-            <p class="text-xs text-slate-400">
-              Sample demo · Live AI abhi connected nahi
-            </p>
-          </div>
-
-        </div>
-
-
-        <label
-          for="review-text"
-          class="eyebrow mb-1.5 block"
-        >
-          Customer review
-        </label>
-
-        <textarea
-          id="review-text"
-          rows="3"
-          maxlength="1000"
-          placeholder="Customer ka review yahan paste karein..."
-          class="field resize-y"
-        ></textarea>
-
-
-        <div class="mt-4">
-
-          <label
-            for="reply-language"
-            class="eyebrow mb-1.5 block"
-          >
-            Reply language
-          </label>
-
-          <select
-            id="reply-language"
-            class="field"
-          >
-            <option value="hinglish">Hinglish</option>
-            <option value="hindi">Hindi</option>
-            <option value="english">English</option>
-          </select>
-
-        </div>
-
-
-        <button
-          id="reply-button"
-          type="button"
-          class="secondary-button mt-4 w-full border-violet-400/40 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20"
-        >
-          <i class="fa-solid fa-pen-to-square"></i>
-          Generate Sample Reply
-        </button>
-
-
-        <p
-          id="reply-error"
-          class="mt-3 hidden text-sm text-rose-300"
-          role="alert"
-        ></p>
-
-
-        <div
-          id="reply-result"
-          class="mt-4 hidden rounded-xl border border-white/10 bg-brandDark p-4"
-        >
-
-          <p class="mb-2 text-xs font-bold uppercase tracking-wider text-emerald-300">
-            Suggested reply · Demo
-          </p>
-
-          <p
-            id="reply-output"
-            class="whitespace-pre-wrap break-words text-sm leading-6 text-slate-200"
-          ></p>
-
-          <button
-            id="copy-reply"
-            type="button"
-            class="secondary-button mt-3 min-h-[36px] px-3 py-2 text-xs"
-          >
-            <i class="fa-regular fa-copy"></i>
-            Copy reply
-          </button>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- QR PREVIEW -->
-
-    <section
-      id="preview-section"
-      class="mx-auto mt-6 hidden max-w-4xl rounded-2xl border border-violet-400/20 bg-brandCard p-5 shadow-2xl sm:p-6"
-      aria-labelledby="preview-heading"
-    >
-
-      <div class="mb-5 flex items-center justify-between gap-3">
-
-        <div>
-          <h2
-            id="preview-heading"
-            class="font-bold text-emerald-300"
-          >
-            <i class="fa-solid fa-circle-check mr-2"></i>
-            QR preview ready
-          </h2>
-
-          <p class="mt-1 text-xs text-slate-400">
-            QR scan karke destination verify kar lein.
-          </p>
-        </div>
-
-        <button
-          id="reset-qr"
-          type="button"
-          class="secondary-button min-h-[36px] px-3 py-2 text-xs"
-        >
-          Reset
-        </button>
-
-      </div>
-
-
-      <!-- PRINT AREA -->
-
-      <div
-        id="standee-print-area"
-        class="standee"
-      >
-
-        <p class="text-[10px] font-black uppercase tracking-[.2em] text-violet-800">
-          ReviewDukaan
-        </p>
-
-        <h3
-          id="preview-title"
-          class="mt-3 break-words text-2xl font-black"
-        >
-          Your Business
-        </h3>
-
-        <p class="mt-3 text-sm text-slate-600">
-          Humein apna honest feedback dein
-        </p>
-
-        <img
-          id="qr-image"
-          class="standee-qr hidden"
-          alt="Google review QR code"
-          width="176"
-          height="176"
-        >
-
-        <div
-          id="qr-image-loading"
-          class="mx-auto my-5 grid h-44 w-44 place-items-center rounded-xl bg-slate-100 text-sm text-slate-500"
-        >
-          <span>
-            <i class="fa-solid fa-spinner fa-spin mb-2 block text-xl"></i>
-            QR load ho raha hai...
-          </span>
-        </div>
-
-        <p class="rounded-lg bg-slate-900 px-3 py-3 text-sm font-bold text-white">
-          Scan karein aur apna experience share karein
-        </p>
-
-        <p class="mt-4 text-[10px] text-slate-500">
-          Thank you for supporting our local business.
-        </p>
-
-      </div>
-
-
-      <div class="no-print mt-5 grid gap-3 sm:grid-cols-2">
-
-        <button
-          id="print-standee"
-          type="button"
-          class="primary-button bg-none"
-        >
-          <i class="fa-solid fa-file-pdf"></i>
-          Print / Save as PDF
-        </button>
-
-        <a
-          id="open-review-link"
-          href="#"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="secondary-button"
-        >
-          <i class="fa-solid fa-arrow-up-right-from-square"></i>
-          Open review link
-        </a>
-
-      </div>
-
-
-      <p class="no-print mt-3 text-xs leading-5 text-slate-400">
-        PDF ke liye print button dabayein aur browser mein “Save as PDF” choose karein.
-        QR image third-party QR service se load hoti hai.
-      </p>
-
-    </section>
-
-
-    <!-- PRICING -->
-
-    <section
-      id="pricing"
-      class="mx-auto mt-8 max-w-4xl rounded-2xl border border-white/10 bg-white/[.03] p-5 sm:p-6"
-    >
-
-      <div class="grid gap-5 sm:grid-cols-[1fr_auto] sm:items-center">
-
-        <div>
-
-          <p class="text-xs font-bold uppercase tracking-[.2em] text-violet-300">
-            Coming next
-          </p>
-
-          <h2 class="mt-2 text-xl font-extrabold">
-            MORDIYX AI Review Replier
-          </h2>
-
-          <p class="mt-2 max-w-xl text-sm leading-6 text-slate-300">
-            Real AI generation, accounts, payments aur trial ko agle development phase mein connect kiya jayega.
-          </p>
-
-        </div>
-
-        <div class="sm:text-right">
-
-          <p class="text-3xl font-black">
-            ₹299<span class="text-sm font-medium text-slate-400">/month</span>
-          </p>
-
-          <span class="mt-1 inline-block rounded-full bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-200">
-            Preview only
-          </span>
-
-          <button
-            id="pricing-signup"
-            type="button"
-            class="secondary-button mt-3 w-full sm:w-auto"
-          >
-            Get Early Access
-          </button>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- FOOTER -->
-
-    <footer class="py-8 text-center text-xs text-slate-500">
-
+  <main class="shell">
+    <section class="hero">
+      <div class="eyebrow"><span class="dot"></span> Your local business growth partner</div>
+      <h1>Better Reviews.<br><span class="gradient">Stronger Business.</span></h1>
       <p>
-        © <span id="year"></span> ReviewDukaan · A MORDIYX AI Venture
+        Create professional Google review QR standees, prepare customer reply drafts,
+        and keep your business tools together in one simple workspace.
       </p>
 
-      <p class="mt-2 leading-5">
-        Google review rating ya business results ki guarantee nahi.
-        Customers se honest feedback maangein.
-      </p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#qr-builder">Create QR Standee ↗</a>
+        <a class="btn secondary" href="#ai-workspace">Explore Reply Assistant</a>
+      </div>
 
+      <div class="trust-line">Simple setup · Mobile friendly · Built for local businesses</div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="section">
+      <div class="section-heading">
+        <div>
+          <h2>Your Workspace</h2>
+          <p>Check your account, trial and subscription status.</p>
+        </div>
+        <span class="pill" id="account-state-pill">Preview Mode</span>
+      </div>
+
+      <div class="grid-3">
+        <div class="dashboard-card">
+          <div class="dashboard-label">Account</div>
+          <div class="dashboard-value" id="dashboard-account">Guest</div>
+          <div class="dashboard-detail" id="dashboard-account-detail">Create an account to start your workspace.</div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="dashboard-label">Current Plan</div>
+          <div class="dashboard-value" id="dashboard-plan">Free Preview</div>
+          <div class="dashboard-detail" id="dashboard-plan-detail">Paid plan is not activated.</div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="dashboard-label">Trial Status</div>
+          <div class="dashboard-value" id="dashboard-trial">Not Started</div>
+          <div class="dashboard-detail" id="dashboard-trial-detail">Sign up to check trial eligibility.</div>
+        </div>
+      </div>
+
+      <div class="trial-banner" style="margin-top:13px">
+        <div style="flex:1;min-width:0">
+          <span class="pill">3-DAY FREE TRIAL</span>
+          <h3 style="margin-top:11px">Explore ReviewDukaan Pro</h3>
+          <p>
+            Eligible new accounts can receive a three-day trial when the server-side
+            trial system is configured. Any payment authorization and recurring billing
+            terms must be shown clearly before a user agrees.
+          </p>
+          <div class="trial-progress">
+            <div id="trial-progress-fill" class="trial-progress-fill"></div>
+          </div>
+          <div id="trial-progress-label" class="hint">Trial progress will appear here.</div>
+        </div>
+        <button id="start-trial-btn" class="btn primary" type="button">Start Free Trial</button>
+      </div>
+
+      <div id="trial-notice" class="notice warning" style="margin-top:12px">
+        Trial activation requires a trusted backend to prevent duplicate trials and verify eligibility.
+        This interface will not pretend a server-side trial has started when that service is not connected.
+      </div>
+    </section>
+
+    <!-- BUSINESS AND QR -->
+    <section id="qr-builder" class="section">
+      <div class="section-heading">
+        <div>
+          <h2>QR Standee Studio</h2>
+          <p>Generate a clean review QR standee for your business.</p>
+        </div>
+        <span class="pill pill-green">QR Preview</span>
+      </div>
+
+      <div class="business-layout">
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <h3>Business Details</h3>
+              <div class="muted" style="margin-top:5px">Customize your review standee.</div>
+            </div>
+            <div class="step">01</div>
+          </div>
+
+          <form id="business-form">
+            <div class="field">
+              <label for="business-name">Business Name *</label>
+              <input class="input" id="business-name" maxlength="100" autocomplete="organization" placeholder="e.g. Sharma Sweet House" required>
+            </div>
+
+            <div class="field">
+              <label for="review-link">Google Review URL *</label>
+              <input class="input" id="review-link" type="url" maxlength="2000" placeholder="https://g.page/r/your-review-link" required>
+              <div class="hint">Paste the link customers should use to leave a review.</div>
+            </div>
+
+            <div class="field">
+              <label for="whatsapp-number">WhatsApp Number (optional)</label>
+              <input class="input" id="whatsapp-number" type="tel" maxlength="25" autocomplete="tel" placeholder="+91 98765 43210">
+            </div>
+
+            <div class="field">
+              <label for="standee-message">Standee Message</label>
+              <select id="standee-message" class="select">
+                <option value="Enjoyed your experience?">Enjoyed your experience?</option>
+                <option value="Your feedback means the world to us!">Your feedback means the world to us!</option>
+                <option value="Scan. Review. Support local!">Scan. Review. Support local!</option>
+              </select>
+            </div>
+
+            <button class="btn primary full" type="submit">Generate Review QR →</button>
+            <div id="business-status" class="hint" aria-live="polite"></div>
+          </form>
+
+          <div class="divider"></div>
+
+          <div class="action-grid">
+            <button id="download-qr" class="btn secondary" type="button">↓ Download QR</button>
+            <button id="print-standee" class="btn quiet" type="button">▣ Print / Save PDF</button>
+          </div>
+
+          <button id="open-review-link" class="btn secondary full" style="margin-top:8px" type="button">
+            Test Review Link ↗
+          </button>
+        </article>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <h3>Live Standee Preview</h3>
+              <div class="muted" style="margin-top:5px">Preview before printing.</div>
+            </div>
+            <div class="step">02</div>
+          </div>
+
+          <div id="standee-print-area" class="qr-preview">
+            <div class="standee-brand">ReviewDukaan</div>
+            <div id="preview-business-name" class="standee-title">Your Business Name</div>
+            <div id="preview-message" class="standee-subtitle">Enjoyed your experience?</div>
+            <div class="standee-subtitle">Scan to leave us a Google review!</div>
+
+            <div id="qrcode">
+              <div class="qr-placeholder">Your QR code will appear here once you add a review link.</div>
+            </div>
+
+            <div class="standee-footer">
+              Thank you for supporting our business ❤️<br>
+              Powered by ReviewDukaan
+            </div>
+          </div>
+
+          <div class="notice" style="margin-top:12px">
+            Tip: scan the QR on your phone before printing multiple copies.
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- AI REPLIES -->
+    <section id="ai-workspace" class="section">
+      <div class="section-heading">
+        <div>
+          <h2>Review Reply Assistant</h2>
+          <p>Create editable reply drafts in your preferred language.</p>
+        </div>
+        <span class="pill pill-yellow" id="ai-mode-pill">Template Mode</span>
+      </div>
+
+      <div class="panel">
+        <div class="ai-grid">
+          <div class="ai-box">
+            <div class="panel-heading">
+              <div>
+                <h3>Reply Settings</h3>
+                <div class="muted" style="margin-top:5px">Choose your reply style.</div>
+              </div>
+              <div class="step">03</div>
+            </div>
+
+            <div class="field">
+              <label for="reviewer-name">Customer Name (optional)</label>
+              <input class="input" id="reviewer-name" maxlength="80" placeholder="e.g. Rahul">
+            </div>
+
+            <div class="field">
+              <label for="review-sentiment">Review Sentiment</label>
+              <select class="select" id="review-sentiment">
+                <option value="positive">Positive ⭐⭐⭐⭐⭐</option>
+                <option value="neutral">Neutral ⭐⭐⭐</option>
+                <option value="negative">Negative ⭐</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="reply-language">Reply Language</label>
+              <select class="select" id="reply-language">
+                <option value="english">English</option>
+                <option value="hindi">Hindi</option>
+                <option value="hinglish">Hinglish</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="reply-tone">Reply Tone</label>
+              <select class="select" id="reply-tone">
+                <option value="professional">Professional</option>
+                <option value="friendly">Friendly</option>
+                <option value="concise">Short & concise</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="customer-review">Customer Review (optional)</label>
+              <textarea class="textarea" id="customer-review" maxlength="2000" placeholder="Paste the customer's review for context..."></textarea>
+            </div>
+
+            <button id="generate-reply" class="btn primary full" type="button">Generate Reply Draft ✨</button>
+
+            <div class="notice warning" style="margin-top:12px">
+              Template mode is available immediately. Real AI generation requires a secured backend API connection.
+            </div>
+          </div>
+
+          <div class="ai-box">
+            <div class="result-head">
+              <h4>Your Reply Draft</h4>
+              <span class="pill">Editable</span>
+            </div>
+
+            <textarea id="reply-output" class="textarea" style="min-height:255px" maxlength="4000" placeholder="Your reply draft will appear here..." aria-label="Reply draft"></textarea>
+
+            <div class="action-grid">
+              <button id="copy-reply" class="btn secondary" type="button">Copy Reply</button>
+              <button id="clear-reply" class="btn secondary" type="button">Clear Draft</button>
+            </div>
+
+            <div class="pricing" id="plans">
+              <div>
+                <strong>ReviewDukaan Pro</strong>
+                <span>Proposed plan: ₹299/month after the applicable trial period.</span>
+                <span>Final price, taxes and renewal terms must be confirmed before payment.</span>
+              </div>
+              <button id="subscribe-btn" class="btn primary" type="button">View Plan</button>
+            </div>
+
+            <div class="hint">
+              No payment is collected by this preview. AutoPay can only be set up through a connected payment provider with explicit user authorization.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACCOUNT AND SUBSCRIPTION -->
+    <section id="account" class="section">
+      <div class="section-heading">
+        <div>
+          <h2>Account & Subscription</h2>
+          <p>View account details and available billing actions.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="account-grid">
+          <div>
+            <h3 style="margin:0 0 10px;font-size:14px">Account Details</h3>
+            <div class="account-list">
+              <div class="account-row"><span>Email</span><strong id="account-email">Not logged in</strong></div>
+              <div class="account-row"><span>Business</span><strong id="account-business">Not set</strong></div>
+              <div class="account-row"><span>Account Status</span><strong id="account-status">Guest</strong></div>
+            </div>
+          </div>
+
+          <div>
+            <h3 style="margin:0 0 10px;font-size:14px">Subscription Details</h3>
+            <div class="account-list">
+              <div class="account-row"><span>Current Plan</span><strong id="account-plan">Free Preview</strong></div>
+              <div class="account-row"><span>Trial Ends</span><strong id="account-trial-end">—</strong></div>
+              <div class="account-row"><span>AutoPay</span><strong id="account-autopay">Not configured</strong></div>
+            </div>
+            <div class="hint" style="margin-top:11px">
+              Billing status must be verified by the backend and payment provider.
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="action-grid">
+          <button id="refresh-account" class="btn secondary" type="button">Refresh Account Status</button>
+          <button id="manage-subscription" class="btn quiet" type="button">Manage Subscription</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <strong>ReviewDukaan · A MORDIYX AI Venture</strong><br>
+      Built for local businesses, one review at a time.<br>
+      <span>© <span id="copyright-year"></span> ReviewDukaan. All rights reserved.</span>
     </footer>
-
   </main>
 
-
-  <!-- AUTH MODAL -->
-
-  <div
-    id="auth-modal"
-    class="modal-backdrop fixed inset-0 z-50 hidden overflow-y-auto p-4"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="auth-title"
-    aria-describedby="auth-description"
-  >
-
-    <div class="flex min-h-full items-center justify-center">
-
-      <div class="modal-panel relative my-auto w-full max-w-md rounded-2xl border border-white/10 bg-brandCard p-5 shadow-2xl sm:p-7">
-
-        <button
-          id="auth-close"
-          type="button"
-          class="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-white/5 hover:text-white"
-          aria-label="Close dialog"
-        >
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-
-
-        <div class="mb-5 flex items-center gap-3">
-
-          <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/15 text-xl text-violet-300">
-            <i class="fa-solid fa-user-shield"></i>
-          </span>
-
-          <div>
-            <h2
-              id="auth-title"
-              class="text-xl font-extrabold"
-            >
-              Create your account
-            </h2>
-
-            <p
-              id="auth-description"
-              class="mt-1 text-xs leading-5 text-slate-400"
-            >
-              UI preview · Account service abhi connected nahi hai.
-            </p>
-          </div>
-
+  <!-- AUTHENTICATION DIALOG -->
+  <div id="auth-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="eyebrow">ReviewDukaan Account</div>
+          <h2 id="auth-title">Welcome back</h2>
+          <p id="auth-description" class="muted">Login to your business workspace.</p>
         </div>
-
-
-        <!-- AUTH MODE SWITCH -->
-
-        <div class="mb-5 grid grid-cols-2 rounded-xl border border-white/10 bg-brandDark p-1">
-
-          <button
-            id="tab-signup"
-            type="button"
-            class="rounded-lg bg-violet-700 px-3 py-2.5 text-sm font-bold text-white"
-          >
-            Sign Up
-          </button>
-
-          <button
-            id="tab-login"
-            type="button"
-            class="rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-400 hover:text-white"
-          >
-            Login
-          </button>
-
-        </div>
-
-
-        <form id="auth-form" class="space-y-4">
-
-          <div id="auth-name-wrap">
-
-            <label
-              for="auth-name"
-              class="eyebrow mb-1.5 block"
-            >
-              Business name
-            </label>
-
-            <input
-              id="auth-name"
-              class="field"
-              type="text"
-              maxlength="80"
-              autocomplete="organization"
-              placeholder="Your shop name"
-            >
-
-          </div>
-
-
-          <div id="auth-whatsapp-wrap">
-
-            <label
-              for="auth-whatsapp"
-              class="eyebrow mb-1.5 block"
-            >
-              WhatsApp number
-            </label>
-
-            <input
-              id="auth-whatsapp"
-              class="field"
-              type="tel"
-              inputmode="tel"
-              maxlength="20"
-              autocomplete="tel"
-              placeholder="+91 98765 43210"
-            >
-
-            <p class="mt-1.5 text-xs text-slate-500">
-              Optional for this UI preview.
-            </p>
-
-          </div>
-
-
-          <div>
-
-            <label
-              for="auth-email"
-              class="eyebrow mb-1.5 block"
-            >
-              Email address
-            </label>
-
-            <input
-              id="auth-email"
-              class="field"
-              type="email"
-              maxlength="254"
-              autocomplete="email"
-              placeholder="you@example.com"
-              required
-            >
-
-          </div>
-
-
-          <div>
-
-            <label
-              for="auth-password"
-              class="eyebrow mb-1.5 block"
-            >
-              Password
-            </label>
-
-            <input
-              id="auth-password"
-              class="field"
-              type="password"
-              minlength="8"
-              maxlength="128"
-              autocomplete="new-password"
-              placeholder="At least 8 characters"
-              required
-            >
-
-          </div>
-
-
-          <p
-            id="auth-error"
-            class="hidden text-sm leading-5 text-rose-300"
-            role="alert"
-          ></p>
-
-
-          <button
-            id="auth-submit"
-            type="submit"
-            class="primary-button w-full"
-          >
-            <i class="fa-solid fa-user-plus"></i>
-            Create Account
-          </button>
-
-        </form>
-
-
-        <div class="mt-5 rounded-xl border border-amber-300/10 bg-amber-300/5 p-3">
-
-          <p class="text-xs leading-5 text-amber-100/80">
-            <i class="fa-solid fa-circle-info mr-1"></i>
-            Demo mode: abhi account create ya login nahi hoga.
-            Supabase connect karne ke baad ye form real authentication karega.
-          </p>
-
-        </div>
-
+        <button id="auth-close" class="close-btn" type="button" aria-label="Close">✕</button>
       </div>
 
-    </div>
+      <div id="auth-message" class="form-message" role="alert"></div>
 
-  </div>
+      <form id="auth-form">
+        <div id="signup-business-wrap" class="field hidden">
+          <label for="auth-business">Business Name *</label>
+          <input id="auth-business" class="input" maxlength="100" autocomplete="organization" placeholder="Your business name">
+        </div>
 
+        <div id="signup-whatsapp-wrap" class="field hidden">
+          <label for="auth-whatsapp">WhatsApp Number (optional)</label>
+          <input id="auth-whatsapp" class="input" type="tel" maxlength="25" autocomplete="tel" placeholder="+91 98765 43210">
+        </div>
 
-  <!-- ACCOUNT PREVIEW MODAL -->
+        <div class="field">
+          <label for="auth-email">Email Address *</label>
+          <input id="auth-email" class="input" type="email" maxlength="254" autocomplete="email" placeholder="you@example.com" required>
+        </div>
 
-  <div
-    id="account-modal"
-    class="modal-backdrop fixed inset-0 z-50 hidden overflow-y-auto p-4"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="account-title"
-  >
+        <div class="field">
+          <label for="auth-password">Password *</label>
+          <input id="auth-password" class="input" type="password" minlength="6" maxlength="128" autocomplete="current-password" placeholder="At least 6 characters" required>
+        </div>
 
-    <div class="flex min-h-full items-center justify-center">
+        <button id="auth-submit" class="btn primary full" type="submit">Login</button>
+      </form>
 
-      <div class="modal-panel relative my-auto w-full max-w-sm rounded-2xl border border-white/10 bg-brandCard p-6 shadow-2xl">
-
-        <button
-          id="account-close"
-          type="button"
-          class="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-white/5 hover:text-white"
-          aria-label="Close account preview"
-        >
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-
-        <span class="mb-4 grid h-12 w-12 place-items-center rounded-xl bg-violet-500/15 text-xl text-violet-300">
-          <i class="fa-solid fa-user"></i>
-        </span>
-
-        <h2 id="account-title" class="text-xl font-extrabold">
-          Your Account
-        </h2>
-
-        <p class="mt-2 text-sm leading-6 text-slate-400">
-          Signup aur login abhi demo mode mein hain. Supabase connect karne ke baad yahan account details aur business profile dikhenge.
-        </p>
-
-        <button
-          id="account-login"
-          type="button"
-          class="primary-button mt-5 w-full"
-        >
-          Continue to Login
-        </button>
-
+      <div style="display:flex;justify-content:space-between;gap:12px;margin-top:13px;flex-wrap:wrap">
+        <button id="forgot-password" class="text-link" type="button">Forgot password?</button>
+        <button id="resend-confirmation" class="text-link hidden" type="button">Resend confirmation email</button>
       </div>
 
-    </div>
+      <div class="switch-text">
+        <span id="auth-switch-label">New to ReviewDukaan?</span>
+        <button id="auth-switch" class="text-button" type="button">Create an account</button>
+      </div>
 
+      <div class="hint" style="margin-top:15px">
+        Account security and trial eligibility must be enforced by the configured backend. Never share your password or payment details with anyone.
+      </div>
+    </div>
   </div>
 
+  <!-- TRIAL / PLAN DIALOG -->
+  <div id="plan-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="plan-title">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="eyebrow">ReviewDukaan Pro</div>
+          <h2 id="plan-title">3-Day Free Trial</h2>
+          <p class="muted">Review the plan before proceeding.</p>
+        </div>
+        <button id="plan-close" class="close-btn" type="button" aria-label="Close">✕</button>
+      </div>
 
-  <!-- JAVASCRIPT -->
+      <div class="dashboard-card">
+        <div class="dashboard-label">Proposed monthly plan</div>
+        <div class="dashboard-value">₹299<span style="font-size:12px;color:var(--muted);font-weight:600"> / month</span></div>
+        <div class="dashboard-detail">Three-day trial, subject to eligibility and final plan configuration.</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="notice">
+        Before any subscription becomes active, the service must display the final price,
+        trial end date, renewal frequency, applicable taxes, payment authorization terms
+        and cancellation method.
+      </div>
+
+      <div class="field" style="margin-top:15px">
+        <label style="display:flex;align-items:flex-start;gap:9px;font-weight:600;line-height:1.7">
+          <input id="trial-consent" type="checkbox" style="margin-top:4px;accent-color:#8B5CF6">
+          <span>I have read the trial and subscription information. I understand that this checkbox alone does not authorize a payment or activate AutoPay.</span>
+        </label>
+      </div>
+
+      <button id="confirm-trial" class="btn primary full" type="button">Check Trial Eligibility</button>
+      <button id="cancel-plan-dialog" class="btn secondary full" style="margin-top:8px" type="button">Close</button>
+
+      <div id="plan-message" class="hint" aria-live="polite" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <div id="toast-region" aria-live="polite" aria-atomic="true"></div>
 
   <script>
     "use strict";
 
-    const $ = (id) => document.getElementById(id);
+    /*
+     * REVIEWDUKAAN CONFIGURATION
+     *
+     * Set these values when your Supabase project is ready.
+     * Use only the Supabase publishable/anon public key here.
+     *
+     * Never place:
+     * - Supabase service_role keys
+     * - OpenAI secret keys
+     * - Payment provider secret keys
+     * - Private webhook secrets
+     * in browser JavaScript.
+     */
+    const CONFIG = Object.freeze({
+      SUPABASE_URL: "YOUR_SUPABASE_PROJECT_URL",
+      SUPABASE_PUBLISHABLE_KEY: "YOUR_SUPABASE_PUBLISHABLE_KEY",
 
-    let toastTimer = null;
-    let authMode = "signup";
-    let lastGeneratedReply = "";
-    let lastReviewLink = "";
-    let lastStandeeName = "";
+      /*
+       * Set this to your deployed Cloudflare Worker URL after implementing
+       * the backend endpoints described by the API contract below.
+       * Example: https://reviewdukaan-api.YOUR_SUBDOMAIN.workers.dev
+       */
+      API_BASE_URL: "",
 
+      PLAN_PRICE_INR: 299,
+      TRIAL_DAYS: 3
+    });
 
-    /* -----------------------------------------
-       GENERAL HELPERS
-    ----------------------------------------- */
+    let supabaseClient = null;
+    let currentUser = null;
+    let authMode = "login";
+    let qrGeneratedURL = "";
+    let currentTrialStatus = null;
+    let isAuthBusy = false;
 
-    $("year").textContent = new Date().getFullYear();
+    const $ = id => document.getElementById(id);
 
+    function notify(message, type = "info") {
+      const region = $("toast-region");
+      const toast = document.createElement("div");
+      toast.className = "toast" + (
+        type === "success" ? " success" :
+        type === "error" ? " error" : ""
+      );
+      toast.textContent = String(message);
+      region.appendChild(toast);
 
-    function showToast(message, type = "info") {
-      const toast = $("toast");
-      const icon = $("toast-icon");
-
-      $("toast-message").textContent = message;
-
-      icon.className = "fa-solid mt-0.5 ";
-
-      if (type === "success") {
-        icon.classList.add("fa-circle-check", "text-emerald-300");
-      } else if (type === "error") {
-        icon.classList.add("fa-circle-exclamation", "text-rose-300");
-      } else {
-        icon.classList.add("fa-circle-info", "text-violet-300");
-      }
-
-      toast.classList.remove("hidden");
-
-      clearTimeout(toastTimer);
-
-      toastTimer = setTimeout(() => {
-        toast.classList.add("hidden");
-      }, 4500);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(5px)";
+        setTimeout(() => toast.remove(), 220);
+      }, 4000);
     }
 
-
-    function hideToast() {
-      $("toast").classList.add("hidden");
-      clearTimeout(toastTimer);
+    function setText(id, value) {
+      $(id).textContent = value == null || value === "" ? "—" : String(value);
     }
 
-
-    $("toast-close").addEventListener("click", hideToast);
-
-
-    function showFieldError(id, message) {
-      $(id).textContent = message;
-      $(id).classList.remove("hidden");
-    }
-
-
-    function hideFieldError(id) {
-      $(id).textContent = "";
-      $(id).classList.add("hidden");
-    }
-
-
-    function setButtonLoading(button, loading, loadingText) {
-      if (loading) {
-        button.dataset.originalHtml = button.innerHTML;
-        button.disabled = true;
-
-        button.innerHTML =
-          '<i class="fa-solid fa-spinner fa-spin"></i> ' +
-          loadingText;
-      } else {
-        button.disabled = false;
-
-        if (button.dataset.originalHtml) {
-          button.innerHTML = button.dataset.originalHtml;
-          delete button.dataset.originalHtml;
-        }
-      }
-    }
-
-
-    function validReviewLink(value) {
+    function validHttpURL(value) {
       try {
-        const url = new URL(value);
+        const url = new URL(String(value).trim());
+        if (!["https:", "http:"].includes(url.protocol)) return null;
+        if (!url.hostname || !url.hostname.includes(".")) return null;
+        return url;
+      } catch (_) {
+        return null;
+      }
+    }
 
-        if (url.protocol !== "https:") {
-          return false;
-        }
+    function supabaseConfigured() {
+      return Boolean(
+        window.supabase &&
+        typeof window.supabase.createClient === "function" &&
+        CONFIG.SUPABASE_URL.startsWith("https://") &&
+        !CONFIG.SUPABASE_URL.includes("YOUR_SUPABASE") &&
+        CONFIG.SUPABASE_PUBLISHABLE_KEY.length > 20 &&
+        !CONFIG.SUPABASE_PUBLISHABLE_KEY.includes("YOUR_SUPABASE")
+      );
+    }
 
-        const host = url.hostname.toLowerCase();
+    function apiConfigured() {
+      const base = CONFIG.API_BASE_URL.trim();
+      if (!base) return false;
+      const url = validHttpURL(base);
+      return Boolean(url && url.protocol === "https:");
+    }
 
-        /*
-          Accept common Google Maps and review-link hosts.
-          Other Google-owned domains may need adding if your
-          particular business review link uses them.
-        */
+    async function apiRequest(path, options = {}) {
+      if (!apiConfigured()) {
+        throw new Error("The secure backend is not configured yet.");
+      }
 
-        return (
-          host === "google.com" ||
-          host.endsWith(".google.com") ||
-          host === "g.page" ||
-          host === "goo.gl" ||
-          host === "maps.app.goo.gl" ||
-          host === "business.google.com"
+      if (!currentUser || !supabaseClient) {
+        throw new Error("Please log in first.");
+      }
+
+      const { data, error } = await supabaseClient.auth.getSession();
+      if (error) throw error;
+
+      const token = data.session?.access_token;
+      if (!token) throw new Error("Your session has expired. Please log in again.");
+
+      const base = CONFIG.API_BASE_URL.replace(/\/+$/, "");
+      const cleanPath = String(path).replace(/^\/+/, "");
+
+      const response = await fetch(base + "/" + cleanPath, {
+        method: options.method || "GET",
+        headers: {
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/json",
+          ...(options.headers || {})
+        },
+        ...(options.body !== undefined
+          ? { body: JSON.stringify(options.body) }
+          : {})
+      });
+
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : null;
+
+      if (!response.ok) {
+        const message = result?.error || result?.message || "The request could not be completed.";
+        throw new Error(message);
+      }
+
+      return result;
+    }
+
+    function initializeSupabase() {
+      if (!supabaseConfigured()) {
+        console.info("ReviewDukaan: Supabase has not been configured.");
+        updateAccountUI();
+        return;
+      }
+
+      try {
+        supabaseClient = window.supabase.createClient(
+          CONFIG.SUPABASE_URL,
+          CONFIG.SUPABASE_PUBLISHABLE_KEY,
+          {
+            auth: {
+              persistSession: true,
+              autoRefreshToken: true,
+              detectSessionInUrl: true
+            }
+          }
         );
 
-      } catch (_) {
+        supabaseClient.auth.getSession()
+          .then(({ data, error }) => {
+            if (error) throw error;
+            setCurrentUser(data.session?.user || null);
+            if (data.session?.user) refreshServerStatus();
+          })
+          .catch(error => {
+            console.error("Session initialization failed:", error);
+          });
+
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+          setCurrentUser(session?.user || null);
+
+          if (event === "SIGNED_IN" && session?.user) {
+            setTimeout(() => refreshServerStatus(), 0);
+          }
+
+          if (event === "SIGNED_OUT") {
+            currentTrialStatus = null;
+            updateAccountUI();
+          }
+        });
+      } catch (error) {
+        console.error("Supabase initialization failed:", error);
+        notify("Authentication initialization failed. Check your configuration.", "error");
+      }
+    }
+
+    function setCurrentUser(user) {
+      currentUser = user;
+
+      $("login-open").classList.toggle("hidden", Boolean(user));
+      $("signup-open").classList.toggle("hidden", Boolean(user));
+      $("logout-btn").classList.toggle("hidden", !user);
+      $("user-status").classList.toggle("hidden", !user);
+
+      setText("user-status", user?.email || "");
+      updateAccountUI();
+    }
+
+    function updateAccountUI() {
+      const loggedIn = Boolean(currentUser);
+      const email = currentUser?.email || "";
+      const metadata = currentUser?.user_metadata || {};
+      const businessName = metadata.business_name || $("business-name").value.trim();
+
+      setText("dashboard-account", loggedIn ? "Registered" : "Guest");
+      setText("dashboard-account-detail", loggedIn ? email : "Sign up to create your account.");
+
+      setText("dashboard-plan", currentTrialStatus?.plan || "Free Preview");
+      setText(
+        "dashboard-plan-detail",
+        currentTrialStatus?.subscription_status
+          ? "Status: " + currentTrialStatus.subscription_status
+          : "Paid subscription not verified."
+      );
+
+      setText("dashboard-trial", currentTrialStatus?.trial_status || "Not Started");
+      setText(
+        "dashboard-trial-detail",
+        currentTrialStatus?.trial_end
+          ? "Ends: " + formatDate(currentTrialStatus.trial_end)
+          : "Trial eligibility requires backend verification."
+      );
+
+      setText("account-email", email || "Not logged in");
+      setText("account-business", businessName || "Not set");
+      setText("account-status", loggedIn ? "Authenticated" : "Guest");
+      setText("account-plan", currentTrialStatus?.plan || "Free Preview");
+      setText("account-trial-end", currentTrialStatus?.trial_end ? formatDate(currentTrialStatus.trial_end) : "—");
+      setText(
+        "account-autopay",
+        currentTrialStatus?.autopay_status || "Not configured"
+      );
+
+      $("account-state-pill").textContent = loggedIn ? "Account Connected" : "Preview Mode";
+
+      const startButton = $("start-trial-btn");
+      startButton.textContent = currentTrialStatus?.trial_status === "active"
+        ? "Trial Active"
+        : "Start Free Trial";
+
+      const trialActive = currentTrialStatus?.trial_status === "active";
+      startButton.disabled = trialActive;
+
+      if (currentTrialStatus?.trial_status === "active") {
+        $("trial-progress-label").textContent =
+          "Trial ends " + formatDate(currentTrialStatus.trial_end);
+      } else {
+        $("trial-progress-label").textContent =
+          "Trial begins only after server-side eligibility verification.";
+      }
+
+      if (!loggedIn) {
+        $("trial-notice").textContent =
+          "Sign in to request trial eligibility. The backend must enforce one trial per eligible account.";
+      } else if (!apiConfigured()) {
+        $("trial-notice").textContent =
+          "Your account is connected, but trial activation needs the secure backend. The trial is not falsely marked as started.";
+      } else if (trialActive) {
+        $("trial-notice").textContent =
+          "Your server-reported trial status is active. Check the end date in your account.";
+      }
+
+      if (!loggedIn) {
+        $("trial-progress-fill").style.width = "0%";
+      } else if (currentTrialStatus?.trial_start && currentTrialStatus?.trial_end) {
+        const start = new Date(currentTrialStatus.trial_start).getTime();
+        const end = new Date(currentTrialStatus.trial_end).getTime();
+        const now = Date.now();
+        const total = Math.max(1, end - start);
+        const elapsed = Math.max(0, Math.min(total, now - start));
+        $("trial-progress-fill").style.width = (elapsed / total * 100) + "%";
+      }
+
+      $("ai-mode-pill").textContent = apiConfigured() ? "Backend Configured" : "Template Mode";
+    }
+
+    function formatDate(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "—";
+      return date.toLocaleString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+
+    async function refreshServerStatus() {
+      if (!currentUser || !apiConfigured()) {
+        updateAccountUI();
+        return;
+      }
+
+      try {
+        const result = await apiRequest("/api/account/status");
+        currentTrialStatus = result?.subscription || result?.data?.subscription || null;
+        updateAccountUI();
+      } catch (error) {
+        console.warn("Server status unavailable:", error.message);
+        $("trial-notice").textContent =
+          "Account is logged in, but subscription status could not be verified. No trial or paid status has been assumed.";
+      }
+    }
+
+    // QR STANDEE
+    function updateStandeePreview() {
+      setText("preview-business-name", $("business-name").value.trim() || "Your Business Name");
+      setText("preview-message", $("standee-message").value);
+      setText("account-business", $("business-name").value.trim() || currentUser?.user_metadata?.business_name || "Not set");
+    }
+
+    function resetQRCode() {
+      $("qrcode").replaceChildren();
+      const placeholder = document.createElement("div");
+      placeholder.className = "qr-placeholder";
+      placeholder.textContent = "Your QR code will appear here once you add a review link.";
+      $("qrcode").appendChild(placeholder);
+      qrGeneratedURL = "";
+    }
+
+    function createQRCode(url) {
+      if (typeof window.QRCode !== "function") {
+        notify("The QR library did not load. Refresh the page and try again.", "error");
+        return false;
+      }
+
+      const target = $("qrcode");
+      target.replaceChildren();
+
+      try {
+        new QRCode(target, {
+          text: url,
+          width: 180,
+          height: 180,
+          colorDark: "#0B0F19",
+          colorLight: "#FFFFFF",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+
+        qrGeneratedURL = url;
+        return true;
+      } catch (error) {
+        console.error("QR generation failed:", error);
+        resetQRCode();
+        notify("Could not generate the QR code.", "error");
         return false;
       }
     }
 
+    $("business-name").addEventListener("input", updateStandeePreview);
+    $("standee-message").addEventListener("change", updateStandeePreview);
 
-    /* -----------------------------------------
-       MODAL HELPERS
-    ----------------------------------------- */
-
-    function openModal(id) {
-      const modal = $(id);
-
-      modal.classList.remove("hidden");
-      document.body.classList.add("modal-open");
-
-      const focusable = modal.querySelector(
-        "input:not([type=hidden]), button"
-      );
-
-      if (focusable) {
-        setTimeout(() => focusable.focus(), 50);
-      }
-    }
-
-
-    function closeModal(id) {
-      $(id).classList.add("hidden");
-
-      const anotherModalOpen =
-        !$("auth-modal").classList.contains("hidden") ||
-        !$("account-modal").classList.contains("hidden");
-
-      if (!anotherModalOpen) {
-        document.body.classList.remove("modal-open");
-      }
-    }
-
-
-    function openAuth(mode = "signup") {
-      closeModal("account-modal");
-
-      authMode = mode;
-
-      updateAuthMode();
-
-      hideFieldError("auth-error");
-
-      openModal("auth-modal");
-    }
-
-
-    function updateAuthMode() {
-      const signup = authMode === "signup";
-
-      $("auth-title").textContent = signup
-        ? "Create your account"
-        : "Welcome back";
-
-      $("auth-description").textContent = signup
-        ? "Create an account to manage your business profile."
-        : "Enter your details to log in.";
-
-      $("auth-name-wrap").classList.toggle("hidden", !signup);
-
-      $("auth-whatsapp-wrap").classList.toggle("hidden", !signup);
-
-      $("auth-name").required = signup;
-
-      $("auth-password").autocomplete = signup
-        ? "new-password"
-        : "current-password";
-
-      $("auth-submit").innerHTML = signup
-        ? '<i class="fa-solid fa-user-plus"></i> Create Account'
-        : '<i class="fa-solid fa-right-to-bracket"></i> Login';
-
-      $("tab-signup").className = signup
-        ? "rounded-lg bg-violet-700 px-3 py-2.5 text-sm font-bold text-white"
-        : "rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-400 hover:text-white";
-
-      $("tab-login").className = !signup
-        ? "rounded-lg bg-violet-700 px-3 py-2.5 text-sm font-bold text-white"
-        : "rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-400 hover:text-white";
-    }
-
-
-    $("login-open").addEventListener("click", () => {
-      openAuth("login");
-    });
-
-
-    $("signup-open").addEventListener("click", () => {
-      openAuth("signup");
-    });
-
-
-    $("pricing-signup").addEventListener("click", () => {
-      openAuth("signup");
-    });
-
-
-    $("tab-signup").addEventListener("click", () => {
-      authMode = "signup";
-      hideFieldError("auth-error");
-      updateAuthMode();
-    });
-
-
-    $("tab-login").addEventListener("click", () => {
-      authMode = "login";
-      hideFieldError("auth-error");
-      updateAuthMode();
-    });
-
-
-    $("auth-close").addEventListener("click", () => {
-      closeModal("auth-modal");
-    });
-
-
-    $("account-close").addEventListener("click", () => {
-      closeModal("account-modal");
-    });
-
-
-    $("account-button").addEventListener("click", () => {
-      openModal("account-modal");
-    });
-
-
-    $("account-login").addEventListener("click", () => {
-      openAuth("login");
-    });
-
-
-    /*
-      Close a modal when the backdrop itself is clicked.
-    */
-
-    ["auth-modal", "account-modal"].forEach((id) => {
-      $(id).addEventListener("click", (event) => {
-        if (event.target === $(id)) {
-          closeModal(id);
-        }
-      });
-    });
-
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        closeModal("auth-modal");
-        closeModal("account-modal");
-      }
-    });
-
-
-    /*
-      Demo-only auth form.
-      This intentionally does not store credentials,
-      create a user, or pretend that login succeeded.
-    */
-
-    $("auth-form").addEventListener("submit", (event) => {
+    $("business-form").addEventListener("submit", event => {
       event.preventDefault();
 
-      hideFieldError("auth-error");
+      const name = $("business-name").value.trim();
+      const reviewURL = validHttpURL($("review-link").value);
 
-      const name = $("auth-name").value.trim();
-      const whatsapp = $("auth-whatsapp").value.trim();
-      const email = $("auth-email").value.trim();
-      const password = $("auth-password").value;
-
-      if (authMode === "signup" && !name) {
-        showFieldError(
-          "auth-error",
-          "Please enter your business name."
-        );
-        $("auth-name").focus();
+      if (!name) {
+        notify("Enter your business name.", "error");
+        $("business-name").focus();
         return;
       }
 
-      if (!email || !$("auth-email").validity.valid) {
-        showFieldError(
-          "auth-error",
-          "Please enter a valid email address."
-        );
+      if (!reviewURL) {
+        notify("Enter a valid review URL starting with https://.", "error");
+        $("review-link").focus();
+        return;
+      }
+
+      updateStandeePreview();
+
+      if (createQRCode(reviewURL.href)) {
+        $("business-status").textContent = "QR generated. Download or print your standee.";
+        $("business-status").style.color = "#A78BFA";
+        notify("Your QR standee is ready!", "success");
+      }
+    });
+
+    function getQRCodeDataURL() {
+      const canvas = $("qrcode").querySelector("canvas");
+      if (canvas) {
+        try { return canvas.toDataURL("image/png"); }
+        catch (_) { return null; }
+      }
+
+      const image = $("qrcode").querySelector("img");
+      if (image?.src?.startsWith("data:image/")) return image.src;
+
+      return null;
+    }
+
+    $("download-qr").addEventListener("click", () => {
+      if (!qrGeneratedURL) {
+        notify("Generate the QR code first.", "error");
+        return;
+      }
+
+      const dataURL = getQRCodeDataURL();
+      if (!dataURL) {
+        notify("QR image is not ready. Please try again.", "error");
+        return;
+      }
+
+      const filename = ($("business-name").value.trim() || "business")
+        .normalize("NFKD")
+        .replace(/[^a-zA-Z0-9_-]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 55) || "business";
+
+      const link = document.createElement("a");
+      link.href = dataURL;
+      link.download = filename + "-review-qr.png";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      notify("QR image download started.", "success");
+    });
+
+    $("print-standee").addEventListener("click", () => {
+      if (!qrGeneratedURL) {
+        notify("Generate the QR code before printing.", "error");
+        return;
+      }
+      window.print();
+    });
+
+    function openReviewLink() {
+      const url = validHttpURL(qrGeneratedURL || $("review-link").value);
+
+      if (!url) {
+        notify("Add a valid review link first.", "error");
+        return;
+      }
+
+      window.open(url.href, "_blank", "noopener,noreferrer");
+    }
+
+    $("open-review-link").addEventListener("click", openReviewLink);
+
+    // REPLY DRAFTS
+    function buildTemplateReply({ sentiment, language, name, tone, review }) {
+      const customer = name.trim();
+      const greeting = customer ? customer + ", " : "";
+
+      const replies = {
+        english: {
+          positive: `Thank you, ${greeting}for your wonderful feedback! We're delighted that you had a positive experience with us. Your support means a lot to our team, and we look forward to welcoming you again.`,
+          neutral: `Thank you, ${greeting}for sharing your feedback. We appreciate you taking the time to tell us about your experience. We're always looking for ways to improve and hope to serve you even better next time.`,
+          negative: `Thank you, ${greeting}for bringing this to our attention. We're sorry your experience did not meet your expectations. We take feedback seriously and would appreciate the opportunity to understand your concerns. Please contact our team so we can look into this.`
+        },
+        hindi: {
+          positive: `आपके शानदार फीडबैक के लिए बहुत-बहुत धन्यवाद${customer ? ", " + customer : ""}! हमें खुशी है कि आपका अनुभव अच्छा रहा। आपका सहयोग हमारे लिए बहुत मायने रखता है। हम फिर से आपकी सेवा करने के लिए उत्सुक हैं।`,
+          neutral: `अपना फीडबैक साझा करने के लिए धन्यवाद${customer ? ", " + customer : ""}। हम आपके सुझावों की सराहना करते हैं और अपनी सेवाओं को बेहतर बनाने के लिए लगातार प्रयास कर रहे हैं। उम्मीद है अगली बार आपका अनुभव और भी अच्छा रहेगा।`,
+          negative: `आपके अनुभव के लिए हमें खेद है${customer ? ", " + customer : ""}। आपका फीडबैक हमारे लिए महत्वपूर्ण है। कृपया हमारी टीम से संपर्क करें ताकि हम आपकी समस्या को बेहतर तरीके से समझकर समाधान की कोशिश कर सकें।`
+        },
+        hinglish: {
+          positive: `Thank you so much${customer ? ", " + customer : ""} for your lovely feedback! Humein khushi hai ki aapka experience achha raha. Aapka support hamare liye bahut important hai. We look forward to serving you again!`,
+          neutral: `Thank you${customer ? ", " + customer : ""} for sharing your feedback. Aapke suggestions hamare liye valuable hain aur hum apni service improve karne par kaam kar rahe hain. Hope your next experience is even better!`,
+          negative: `Thank you${customer ? ", " + customer : ""} for letting us know. Aapka experience expectations ke according nahi raha, iske liye humein afsos hai. Please contact our team so we can understand the issue and try to make things right.`
+        }
+      };
+
+      let reply = replies[language]?.[sentiment] || replies.english[sentiment];
+
+      if (tone === "concise") {
+        const sentences = reply.match(/[^.!?।]+[.!?।]?/g) || [reply];
+        reply = sentences.slice(0, 2).join("").trim();
+      } else if (tone === "friendly" && language === "english") {
+        reply += " We appreciate you being part of our community!";
+      }
+
+      if (review.trim()) {
+        const ending = {
+          english: "\n\nThank you again for taking the time to share your thoughts.",
+          hindi: "\n\nअपना अनुभव साझा करने के लिए एक बार फिर धन्यवाद।",
+          hinglish: "\n\nApna experience share karne ke liye ek baar phir thank you."
+        };
+        reply += ending[language] || ending.english;
+      }
+
+      return reply;
+    }
+
+    $("generate-reply").addEventListener("click", async () => {
+      const button = $("generate-reply");
+      button.disabled = true;
+
+      try {
+        const input = {
+          reviewer_name: $("reviewer-name").value.trim().slice(0,80),
+          sentiment: $("review-sentiment").value,
+          language: $("reply-language").value,
+          tone: $("reply-tone").value,
+          review: $("customer-review").value.trim().slice(0,2000),
+          business_name: $("business-name").value.trim().slice(0,100)
+        };
+
+        if (apiConfigured()) {
+          try {
+            const result = await apiRequest("/api/ai/reply", {
+              method: "POST",
+              body: input
+            });
+
+            const reply = result?.reply || result?.data?.reply;
+
+            if (typeof reply === "string" && reply.trim()) {
+              $("reply-output").value = reply.trim().slice(0,4000);
+              notify("Reply generated by the connected backend.", "success");
+              return;
+            }
+
+            throw new Error("The AI service returned an invalid response.");
+          } catch (error) {
+            console.error("Live AI request failed:", error);
+            notify("Live AI is unavailable. A demo template will be used instead.", "error");
+          }
+        }
+
+        $("reply-output").value = buildTemplateReply({
+          sentiment: input.sentiment,
+          language: input.language,
+          tone: input.tone,
+          name: input.reviewer_name,
+          review: input.review
+        });
+
+        notify("Reply draft created. Review it before posting.", "success");
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    $("copy-reply").addEventListener("click", async () => {
+      const text = $("reply-output").value.trim();
+
+      if (!text) {
+        notify("Generate a reply first.", "error");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(text);
+        notify("Reply copied to clipboard.", "success");
+      } catch (_) {
+        $("reply-output").focus();
+        $("reply-output").select();
+
+        if (document.execCommand("copy")) {
+          notify("Reply copied.", "success");
+        } else {
+          notify("Please select and copy the reply manually.", "error");
+        }
+      }
+    });
+
+    $("clear-reply").addEventListener("click", () => {
+      $("reply-output").value = "";
+      notify("Reply draft cleared.");
+    });
+
+    // AUTHENTICATION
+    function openAuth(mode = "login") {
+      setAuthMode(mode);
+      $("auth-modal").classList.add("open");
+      document.body.style.overflow = "hidden";
+      setTimeout(() => $("auth-email").focus(), 60);
+    }
+
+    function closeAuth() {
+      $("auth-modal").classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode === "signup" ? "signup" : "login";
+      const signup = authMode === "signup";
+
+      setText("auth-title", signup ? "Create your account" : "Welcome back");
+      setText("auth-description", signup
+        ? "Set up your business workspace."
+        : "Login to your ReviewDukaan account.");
+
+      $("signup-business-wrap").classList.toggle("hidden", !signup);
+      $("signup-whatsapp-wrap").classList.toggle("hidden", !signup);
+      $("auth-business").required = signup;
+      $("auth-password").autocomplete = signup ? "new-password" : "current-password";
+      $("auth-submit").textContent = signup ? "Create Account" : "Login";
+      setText("auth-switch-label", signup ? "Already have an account?" : "New to ReviewDukaan?");
+      $("auth-switch").textContent = signup ? "Login instead" : "Create an account";
+      $("resend-confirmation").classList.toggle("hidden", !signup);
+      hideAuthMessage();
+    }
+
+    function showAuthMessage(message) {
+      setText("auth-message", message);
+      $("auth-message").classList.add("visible");
+    }
+
+    function hideAuthMessage() {
+      $("auth-message").textContent = "";
+      $("auth-message").classList.remove("visible");
+    }
+
+    $("login-open").addEventListener("click", () => openAuth("login"));
+    $("signup-open").addEventListener("click", () => openAuth("signup"));
+    $("auth-close").addEventListener("click", closeAuth);
+    $("auth-switch").addEventListener("click", () => setAuthMode(authMode === "login" ? "signup" : "login"));
+
+    $("auth-modal").addEventListener("click", event => {
+      if (event.target === $("auth-modal")) closeAuth();
+    });
+
+    $("plan-modal").addEventListener("click", event => {
+      if (event.target === $("plan-modal")) closePlanModal();
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        closeAuth();
+        closePlanModal();
+      }
+    });
+
+    $("auth-form").addEventListener("submit", async event => {
+      event.preventDefault();
+
+      if (isAuthBusy) return;
+
+      if (!supabaseClient) {
+        showAuthMessage("Supabase is not configured. Add your project URL and publishable/anon public key in CONFIG.");
+        return;
+      }
+
+      const email = $("auth-email").value.trim();
+      const password = $("auth-password").value;
+
+      if (!email || !password) {
+        showAuthMessage("Enter your email and password.");
+        return;
+      }
+
+      if (password.length < 6) {
+        showAuthMessage("Password must contain at least 6 characters.");
+        return;
+      }
+
+      if (authMode === "signup" && !$("auth-business").value.trim()) {
+        showAuthMessage("Enter your business name.");
+        return;
+      }
+
+      isAuthBusy = true;
+      $("auth-submit").disabled = true;
+      $("auth-submit").textContent = authMode === "signup" ? "Creating account..." : "Logging in...";
+      hideAuthMessage();
+
+      try {
+        let result;
+
+        if (authMode === "signup") {
+          result = await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                business_name: $("auth-business").value.trim().slice(0,100),
+                whatsapp: $("auth-whatsapp").value.trim().slice(0,25)
+              }
+            }
+          });
+
+          if (result.error) throw result.error;
+
+          if (result.data?.user && !result.data?.session) {
+            closeAuth();
+            notify("Account created. Check your email to confirm your account.", "success");
+            return;
+          }
+
+          closeAuth();
+          notify("Account created successfully.", "success");
+        } else {
+          result = await supabaseClient.auth.signInWithPassword({ email, password });
+
+          if (result.error) throw result.error;
+
+          closeAuth();
+          notify("Login successful.", "success");
+        }
+      } catch (error) {
+        console.error("Authentication failed:", error);
+        showAuthMessage(error?.message || "Authentication failed. Please try again.");
+      } finally {
+        isAuthBusy = false;
+        $("auth-submit").disabled = false;
+        $("auth-submit").textContent = authMode === "signup" ? "Create Account" : "Login";
+      }
+    });
+
+    $("forgot-password").addEventListener("click", async () => {
+      if (!supabaseClient) {
+        showAuthMessage("Configure Supabase before using password reset.");
+        return;
+      }
+
+      const email = $("auth-email").value.trim();
+
+      if (!email) {
+        showAuthMessage("Enter your email address first.");
         $("auth-email").focus();
         return;
       }
 
-      if (password.length < 8) {
-        showFieldError(
-          "auth-error",
-          "Password must contain at least 8 characters."
-        );
-        $("auth-password").focus();
-        return;
-      }
+      try {
+        const redirectTo = window.location.origin + window.location.pathname;
 
-      if (whatsapp && !/^\+?[0-9\s()-]{8,20}$/.test(whatsapp)) {
-        showFieldError(
-          "auth-error",
-          "Please enter a valid WhatsApp number."
-        );
-        $("auth-whatsapp").focus();
-        return;
-      }
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo
+        });
 
-      showFieldError(
-        "auth-error",
-        "UI preview only: Supabase authentication has not been connected yet. No account was created and no login was performed."
-      );
+        if (error) throw error;
+
+        showAuthMessage("If the account is eligible, a password reset email will be sent. Check your inbox.");
+      } catch (error) {
+        showAuthMessage(error?.message || "Password reset could not be requested.");
+      }
     });
 
-
-    /* -----------------------------------------
-       QR GENERATOR
-    ----------------------------------------- */
-
-    $("qr-form").addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      hideFieldError("qr-error");
-
-      const name = $("shop-name").value.trim();
-      const link = $("shop-link").value.trim();
-      const button = $("qr-generate");
-
-      if (!name) {
-        showFieldError(
-          "qr-error",
-          "Pehle business ka naam enter karein."
-        );
-        $("shop-name").focus();
+    $("resend-confirmation").addEventListener("click", async () => {
+      if (!supabaseClient) {
+        showAuthMessage("Configure Supabase first.");
         return;
       }
 
-      if (!validReviewLink(link)) {
-        showFieldError(
-          "qr-error",
-          "Valid HTTPS Google Review link paste karein."
-        );
-        $("shop-link").focus();
+      const email = $("auth-email").value.trim();
+
+      if (!email) {
+        showAuthMessage("Enter the signup email first.");
         return;
       }
-
-      setButtonLoading(
-        button,
-        true,
-        "QR generate ho raha hai..."
-      );
 
       try {
-        const preview = $("preview-section");
-        const image = $("qr-image");
-        const loader = $("qr-image-loading");
+        const { error } = await supabaseClient.auth.resend({
+          type: "signup",
+          email
+        });
 
-        $("preview-title").textContent = name;
+        if (error) throw error;
 
-        image.classList.add("hidden");
-        loader.classList.remove("hidden");
+        showAuthMessage("If confirmation is available, a new email will be sent.");
+      } catch (error) {
+        showAuthMessage(error?.message || "Could not request a confirmation email.");
+      }
+    });
 
-        preview.classList.remove("hidden");
+    $("logout-btn").addEventListener("click", async () => {
+      if (!supabaseClient) {
+        setCurrentUser(null);
+        return;
+      }
 
-        lastReviewLink = link;
-        lastStandeeName = name;
+      try {
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) throw error;
 
-        $("open-review-link").href = link;
+        currentTrialStatus = null;
+        setCurrentUser(null);
+        notify("You have logged out.", "success");
+      } catch (error) {
+        console.error("Logout failed:", error);
+        notify("Could not log out. Please try again.", "error");
+      }
+    });
 
+    // TRIAL / SUBSCRIPTION
+    function openPlanModal() {
+      $("plan-modal").classList.add("open");
+      $("plan-message").textContent = "";
+      $("trial-consent").checked = false;
+      document.body.style.overflow = "hidden";
+    }
+
+    function closePlanModal() {
+      $("plan-modal").classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
+    $("start-trial-btn").addEventListener("click", () => {
+      if (!currentUser) {
+        openAuth("signup");
+        notify("Create an account or log in to check trial eligibility.");
+        return;
+      }
+
+      openPlanModal();
+    });
+
+    $("subscribe-btn").addEventListener("click", () => {
+      if (!currentUser) {
+        openAuth("signup");
+        return;
+      }
+
+      openPlanModal();
+    });
+
+    $("plan-close").addEventListener("click", closePlanModal);
+    $("cancel-plan-dialog").addEventListener("click", closePlanModal);
+
+    $("confirm-trial").addEventListener("click", async () => {
+      if (!currentUser) {
+        closePlanModal();
+        openAuth("signup");
+        return;
+      }
+
+      if (!$("trial-consent").checked) {
+        $("plan-message").textContent =
+          "Please review the information and check the acknowledgment box before continuing.";
+        return;
+      }
+
+      if (!apiConfigured()) {
+        $("plan-message").textContent =
+          "The secure trial service is not connected yet. No trial has been activated, and no payment or AutoPay has been set up.";
+        return;
+      }
+
+      const button = $("confirm-trial");
+      button.disabled = true;
+      button.textContent = "Checking eligibility...";
+
+      try {
         /*
-          Encode the destination as a URL parameter.
-          The image itself is provided by a third-party QR service.
-        */
-
-        const qrUrl =
-          "https://api.qrserver.com/v1/create-qr-code/" +
-          "?size=320x320&margin=12&data=" +
-          encodeURIComponent(link);
-
-        await new Promise((resolve, reject) => {
-          let completed = false;
-
-          const timeout = setTimeout(() => {
-            finish(new Error("QR image request timed out."));
-          }, 15000);
-
-          function finish(error) {
-            if (completed) return;
-
-            completed = true;
-            clearTimeout(timeout);
-
-            image.onload = null;
-            image.onerror = null;
-
-            if (error) {
-              reject(error);
-            } else {
-              resolve();
-            }
-          }
-
-          image.onload = () => finish();
-          image.onerror = () => {
-            finish(new Error("Could not load the QR image."));
-          };
-
-          image.src = qrUrl;
-
-          if (image.complete && image.naturalWidth > 0) {
-            finish();
+         * Backend contract:
+         * POST /api/trial/start
+         *
+         * Backend must:
+         * - Verify Supabase JWT server-side.
+         * - Verify account eligibility and prior trial history.
+         * - Store trial_start and trial_end in the database.
+         * - Set trial_end = trial_start + 3 days (server-side).
+         * - Never trust dates supplied by the browser.
+         * - Return current subscription/trial status.
+         *
+         * Do not create a real payment mandate from this endpoint.
+         * Recurring billing needs a separate, explicit provider authorization flow.
+         */
+        const result = await apiRequest("/api/trial/start", {
+          method: "POST",
+          body: {
+            requested_trial_days: CONFIG.TRIAL_DAYS,
+            plan: "pro_monthly",
+            acknowledgement: true
           }
         });
 
-        image.classList.remove("hidden");
-        loader.classList.add("hidden");
+        currentTrialStatus = result?.subscription || result?.data?.subscription || null;
 
-        showToast(
-          "QR standee ready! Scan karke link verify kar lein.",
+        closePlanModal();
+        updateAccountUI();
+
+        notify(
+          result?.message || "Trial service response received. Verify the status shown in your dashboard.",
           "success"
         );
 
-        preview.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
-
+        await refreshServerStatus();
       } catch (error) {
-        console.error("QR generation failed:", error);
-
-        $("preview-section").classList.add("hidden");
-
-        showFieldError(
-          "qr-error",
-          "QR image load nahi hui. Internet check karein aur dobara try karein."
-        );
-
-        showToast(
-          "QR generate nahi ho paya. Please try again.",
-          "error"
-        );
-
+        console.error("Trial activation failed:", error);
+        $("plan-message").textContent = error?.message ||
+          "Trial eligibility could not be verified. No trial activation has been assumed.";
       } finally {
-        setButtonLoading(button, false);
+        button.disabled = false;
+        button.textContent = "Check Trial Eligibility";
       }
     });
 
-
-    /* -----------------------------------------
-       RESET QR
-    ----------------------------------------- */
-
-    $("reset-qr").addEventListener("click", () => {
-      $("qr-form").reset();
-
-      $("preview-section").classList.add("hidden");
-
-      $("qr-image").removeAttribute("src");
-      $("qr-image").classList.add("hidden");
-
-      $("qr-image-loading").classList.remove("hidden");
-
-      hideFieldError("qr-error");
-
-      lastReviewLink = "";
-      lastStandeeName = "";
-
-      $("setup-card").scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-    });
-
-
-    /* -----------------------------------------
-       PRINT / SAVE AS PDF
-    ----------------------------------------- */
-
-    $("print-standee").addEventListener("click", () => {
-      if (
-        !lastReviewLink ||
-        !$("qr-image").complete ||
-        $("qr-image").naturalWidth === 0
-      ) {
-        showToast(
-          "Pehle QR image successfully generate karein.",
-          "error"
-        );
+    $("refresh-account").addEventListener("click", async () => {
+      if (!currentUser) {
+        notify("Log in to refresh account status.", "error");
+        openAuth("login");
         return;
       }
 
-      window.print();
-    });
-
-
-    /* -----------------------------------------
-       SAMPLE AI REPLY
-    ----------------------------------------- */
-
-    $("reply-button").addEventListener("click", () => {
-      hideFieldError("reply-error");
-
-      const review = $("review-text").value.trim();
-      const language = $("reply-language").value;
-
-      if (!review) {
-        showFieldError(
-          "reply-error",
-          "Pehle customer ka review paste karein."
-        );
-
-        $("review-text").focus();
+      if (!apiConfigured()) {
+        notify("The secure backend is not connected yet.", "error");
         return;
       }
 
-      if (review.length > 1000) {
-        showFieldError(
-          "reply-error",
-          "Review 1000 characters se chhota hona chahiye."
-        );
+      await refreshServerStatus();
+      notify("Account status refresh requested.");
+    });
+
+    $("manage-subscription").addEventListener("click", async () => {
+      if (!currentUser) {
+        openAuth("login");
         return;
       }
 
-      const negativePattern =
-        /\b(bad|poor|worst|late|rude|dirty|slow|terrible|disappointed|unhappy|broken|wrong|refund|complaint)\b|खराब|देरी|बुरा|गंदा|नाराज़|नाराज|शिकायत|बेकार|निराश/i;
-
-      const negative = negativePattern.test(review);
-
-      let reply = "";
-
-      if (language === "hindi") {
-        reply = negative
-          ? "आपके अनुभव के लिए हमें खेद है। अपनी प्रतिक्रिया साझा करने के लिए धन्यवाद। कृपया हमसे सीधे संपर्क करें, ताकि हम आपकी समस्या को समझकर उचित समाधान खोज सकें।"
-          : "अपना अनुभव साझा करने के लिए आपका बहुत धन्यवाद। आपकी प्रतिक्रिया हमारे लिए महत्वपूर्ण है और हमें अपनी सेवाओं को बेहतर बनाने में मदद करती है। हम फिर से आपकी सेवा करने का अवसर मिलने की उम्मीद करते हैं।";
-
-      } else if (language === "english") {
-        reply = negative
-          ? "We're sorry your experience did not meet expectations. Thank you for bringing this to our attention. Please contact the business directly so the team can understand the issue and work toward a resolution."
-          : "Thank you for taking the time to share your experience. We truly appreciate your feedback and are glad you visited us. We look forward to serving you again.";
-
-      } else {
-        reply = negative
-          ? "Aapke experience ke liye humein afsos hai. Feedback share karne ke liye thank you. Please shop management se directly contact karein, taaki issue samajhkar suitable solution find kar sakein."
-          : "Apna experience share karne ke liye bahut thank you! Aapka feedback hamare liye important hai. Humein khushi hogi agar humein aapki dobara service karne ka mauka mile.";
-      }
-
-      lastGeneratedReply = reply;
-
-      $("reply-output").textContent = reply;
-      $("reply-result").classList.remove("hidden");
-
-      showToast(
-        "Sample reply ready. Ye demo hai, live AI response nahi.",
-        "success"
-      );
-    });
-
-
-    /* -----------------------------------------
-       COPY REPLY
-    ----------------------------------------- */
-
-    $("copy-reply").addEventListener("click", async function () {
-      const text = lastGeneratedReply.trim();
-
-      if (!text) {
-        showToast("Copy karne ke liye reply generate karein.", "error");
+      if (!apiConfigured()) {
+        notify("Subscription management needs the configured payment backend.", "error");
         return;
       }
 
       try {
-        if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(text);
-        } else {
-          throw new Error("Clipboard API unavailable.");
+        const result = await apiRequest("/api/billing/portal", {
+          method: "POST",
+          body: {}
+        });
+
+        const portalURL = validHttpURL(result?.url || result?.data?.url);
+
+        if (!portalURL) {
+          throw new Error("No valid subscription management link was returned.");
         }
 
-        this.innerHTML =
-          '<i class="fa-solid fa-check"></i> Copied!';
-
-        showToast("Reply clipboard par copy ho gaya.", "success");
-
-        setTimeout(() => {
-          this.innerHTML =
-            '<i class="fa-regular fa-copy"></i> Copy reply';
-        }, 1800);
-
-      } catch (_) {
-        /*
-          Fallback for browsers where Clipboard API is unavailable.
-        */
-
-        const area = document.createElement("textarea");
-
-        area.value = text;
-        area.setAttribute("readonly", "");
-
-        area.style.position = "fixed";
-        area.style.opacity = "0";
-
-        document.body.appendChild(area);
-
-        area.select();
-
-        let copied = false;
-
-        try {
-          copied = document.execCommand("copy");
-        } catch (_) {
-          copied = false;
-        }
-
-        area.remove();
-
-        if (copied) {
-          showToast("Reply clipboard par copy ho gaya.", "success");
-        } else {
-          showToast(
-            "Automatic copy unavailable. Reply ko manually select karein.",
-            "error"
-          );
-        }
+        window.open(portalURL.href, "_blank", "noopener,noreferrer");
+      } catch (error) {
+        console.error("Billing portal failed:", error);
+        notify(error?.message || "Subscription management is unavailable.", "error");
       }
     });
 
-
-    /* -----------------------------------------
-       INITIAL STATE
-    ----------------------------------------- */
-
-    updateAuthMode();
-
+    // INITIALIZATION
+    $("copyright-year").textContent = String(new Date().getFullYear());
+    updateStandeePreview();
+    resetQRCode();
+    updateAccountUI();
+    initializeSupabase();
   </script>
-
 </body>
 </html>
